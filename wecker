@@ -1,0 +1,140 @@
+#!/bin/bash
+######################################################################
+#
+# wecker
+# An alarm for your console
+#
+# Copyright (c) 2013 Emanuel Duss
+# Licensed under GNU General Public License
+#
+######################################################################
+
+######################################################################
+# Variabeln
+NOW=`date +%s`
+
+######################################################################
+# Funktionen
+PrintUsage () {
+  echo "Usage:
+  wecker option <params>
+
+  Options:
+    set <time>
+      Set the alarm at <time>
+    sleep <minutes>
+      Suspend the computer after <minutes>
+    disable
+      Disable the alarm
+    status
+      Shows the current alarm time
+
+  Examples:
+    wecker set 23:00
+      The computer will start at 23:00h
+    wecker sleep 42m
+      The computer will suspend in 42 minutes
+    wecker disable
+      The computer will not start automatically"
+}
+
+######################################################################
+# Main
+
+case "$1" in
+  "set")
+    if [ "$UID" -ne 0 ]
+    then
+      echo "Only root can set the alarm"
+      exit 1
+    fi
+    if [ -z "$2" ]
+    then
+      echo "You must specify the time (eg. 23:05)!"
+      exit 1
+    fi
+    if ! date -d $2 >/dev/null 2>&1
+    then
+      echo "Alarm time is invalid."
+      exit 1
+    fi
+    # Alarm only possible in the future
+    if [ "`date -d $2 +%s`" -gt "$NOW" ]
+    then
+      echo "Set alarm for today"
+      ALARMTIME="`date -d $2 +%s`"
+    elif [ "$((`date -d $2 +%s` - $NOW))" -ge 86400 ]
+    then
+      echo "Alarm time not possible."
+      exit 1
+    else
+      echo "Set alarm for tomorrow"
+      ALARMTIME="$((`date -d $2 +%s` + 86400))"
+    fi
+    if rtcwake -m no -t "$ALARMTIME" >/dev/null 2>&1
+    then
+      $0 status
+    else
+      echo "Alarm set failed!"
+      exit 1
+    fi
+    ;;
+
+  "sleep")
+    if [ "$UID" -ne 0 ]
+    then
+      echo "Only root can suspend the computer."
+      exit 1
+    fi
+    if [ -z "$2" ]
+    then
+      echo "You must specify how many minutes for sleeping in"
+      exit 1
+    fi
+    if ! [[ "$2" =~ ^[0-9]+$ ]]
+    then
+      echo "This is not a number."
+      exit 1
+    fi
+    echo "Computer will standby in $2 minutes."
+    sleep ${2}m
+    pm-suspend
+    ;;
+
+  "status")
+    echo -n "Current status: "
+    if [ "`awk '/alarm_IRQ/{ print $3 }' /proc/driver/rtc`" == "yes" ]
+    then
+      ALARM=`cat /sys/class/rtc/rtc0/wakealarm`
+      date -d @"$ALARM" "+Alarm is set: %A %Y-%m-%d %H:%M:%S"
+
+      DIFF=`expr $ALARM - $NOW`
+      HRS=`expr $DIFF / 60 / 60`
+      MINS=`expr \( $DIFF - $HRS \* 60 \* 60 \) / 60`
+      echo "Alarm will start in $HRS h $MINS m"
+    else
+      echo "Alarm is not set."
+    fi
+    ;;
+
+  "disable")
+    if [ "$UID" -ne 0 ]
+    then
+      echo "Only root can disable the alarm."
+      exit 1
+    fi
+    echo "Disable alarm."
+    rtcwake -m disable
+    $0 status
+    ;;
+
+  "-h")
+    PrintUsage
+    ;;
+  *)
+    PrintUsage
+    exit 1
+    ;;
+esac
+
+# EOF
