@@ -1,0 +1,45 @@
+#!/usr/bin/bash
+########################################################################
+#
+# hsrsync
+# Synchronisiert Verzeichnisse der HSR
+#
+########################################################################
+
+########################################################################
+# Variabeln
+DSTDIR=/home/emanuel/Daten/Studium/Skripteserver_Semester_2_FS13
+MNTDIR=/media/hsr/skripte
+SRCDIR="$MNTDIR/Informatik/Fachbereich/Betriebssysteme_2/Bsys2 \
+  $MNTDIR/Informatik/Fachbereich/Computernetze_2/CN2 \
+  $MNTDIR/Informatik/Fachbereich/Computernetze_2/CN2Prak \
+  $MNTDIR/Informatik/Fachbereich/Programmieren_2_Algorithmen_und_Datenstrukturen/AD \
+  $MNTDIR/Mathematik_Naturwissenschaften/Analysis_2_fuer_Informatiker/An2I \
+  $MNTDIR/Kommunikation_Wirtschaft_Recht/Business_und_Recht_2 \
+  $MNTDIR/Mathematik_Naturwissenschaften/Mathematische_Grundlagen_der_Informatik_2/Math2I"
+  # $MNTDIR/Kommunikation_Wirtschaft_Recht/English_The_World_of_Science \
+
+########################################################################
+# Main
+if ! mountpoint $MNTDIR > /dev/null 2>&1
+then
+  echo $MNTDIR ist nicht gemountet. Mounte...
+  if ! mount $MNTDIR
+  then
+    echo Fehler: Verzeichnis $MNTDIR kann nicht gemountet werden!
+    exit 1
+  fi
+fi
+
+if ! [ -d $DSTDIR ]
+then
+  echo $DSTDIR existiert nicht
+  exit 1
+fi
+
+rsync -ahvz --progress --delete --exclude "Thumbs.db" $SRCDIR $DSTDIR
+
+echo Totale Grösse:
+du -hs $DSTDIR
+
+# EOF
