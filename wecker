@@ -81,11 +81,21 @@ case "$1" in
     ;;
 
   "sleep")
-    if [ "$UID" -ne 0 ]
+    if [ "$UID" -eq 0 ] && which pm-suspend >/dev/null 2>&1
     then
-      echo "Only root can suspend the computer."
+      SUSPENDCMD="pm-suspend"
+    fi
+    if which systemctl >/dev/null 2>&1
+    then
+      SUSPENDCMD="systemctl suspend"
+    fi
+    if [ -z "$SUSPENDCMD" ]
+    then
+      echo "Your computer is not able to suspend."
+      echo "Please check permissions or install required software."
       exit 1
     fi
+
     if [ -z "$2" ]
     then
       echo "You must specify how many minutes for sleeping in"
@@ -96,9 +106,10 @@ case "$1" in
       echo "This is not a number."
       exit 1
     fi
+
     echo "Computer will standby in $2 minutes."
     sleep ${2}m
-    pm-suspend
+    $SUSPENDCMD
     ;;
 
   "status")
