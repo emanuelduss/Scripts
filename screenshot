@@ -1,0 +1,30 @@
+#!/bin/bash
+########################################################################
+#
+# screenshot
+# Wrapper Script für scrot
+#
+########################################################################
+
+########################################################################
+# Variabeln
+FOLDER="$HOME/Daten/Bilder/Screenshots"
+APP="feh -g 600x600+50%+50% --borderless --scale-down --image-bg checks"
+
+########################################################################
+# Main
+if [ ! -d "$FOLDER" ]
+then
+  FOLDER="$HOME"
+fi
+
+case $1 in
+  full)
+    scrot -e "$APP \$f" "$FOLDER/%Y-%m-%d_%H-%M-%S.png"
+  ;;
+  *)
+    scrot -s -e "$APP \$f" "$FOLDER/%Y-%m-%d_%H-%M-%S.png"
+  ;;
+esac
+
+# EOF
