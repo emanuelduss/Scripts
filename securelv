@@ -1,0 +1,42 @@
+#!/bin/bash
+########################################################################
+#
+# securelv
+# Mount a LUKS encrypted Logical Volume
+#
+########################################################################
+
+########################################################################
+# Variabeln
+MOUNTPATH="/home/emanuel/secure"
+LV="/dev/mapper/rootvg-secure"
+NAME="secure"
+
+########################################################################
+# Funktionen
+usage () {
+  echo "Usage:
+  securelv { mount | umount }"
+}
+
+########################################################################
+# Main
+case $1 in
+  mount)
+    echo cryptsetup luksOpen $LV $NAME
+    cryptsetup luksOpen $LV $NAME
+    echo mount /dev/mapper/secure $MOUNTPATH
+    mount /dev/mapper/secure $MOUNTPATH
+    ;;
+  umount)
+    echo umount $MOUNTPATH
+    umount $MOUNTPATH
+    echo cryptsetup luksClose /dev/mapper/$NAME
+    cryptsetup luksClose /dev/mapper/$NAME
+    ;;
+  *)
+    usage
+    ;;
+esac
+
+# EOF
