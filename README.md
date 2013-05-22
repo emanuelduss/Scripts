@@ -4,6 +4,7 @@ Scripts
 My personal scripts.
 
 * `bildschirm`: A xrandr wrapper for screen settings
+* `dyndnslogin`: Automate DynDNS login to prevent account expiration
 * `hsrsync`: Synchronisiert mit dem Skripteserver der HSR
 * `propersuspend`: Computer sauber in den Standby setzen
 * `screenshot`: Wrapper für `scrot` um Screenshots zu erstellen
