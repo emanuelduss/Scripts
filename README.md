@@ -4,6 +4,7 @@ Scripts
 My personal scripts.
 
 * `bildschirm`: A xrandr wrapper for screen settings
+* `baseconv`: Convert numbers from one base to another
 * `dyndnslogin`: Automate DynDNS login to prevent account expiration
 * `hsrsync`: Synchronisiert mit dem Skripteserver der HSR
 * `propersuspend`: Computer sauber in den Standby setzen
