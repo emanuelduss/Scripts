@@ -15,7 +15,7 @@ NOW=`date +%s`
 
 ######################################################################
 # Funktionen
-PrintUsage () {
+PrintUsage() {
   echo "Usage:
   wecker option <params>
 
