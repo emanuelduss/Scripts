@@ -14,7 +14,7 @@ NAME="secure"
 
 ########################################################################
 # Funktionen
-usage () {
+PrintUsage() {
   echo "Usage:
   securelv { mount | umount }"
 }
@@ -35,7 +35,7 @@ case $1 in
     cryptsetup luksClose /dev/mapper/$NAME
     ;;
   *)
-    usage
+    PrintUsage
     ;;
 esac
 
