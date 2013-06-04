@@ -35,17 +35,17 @@ else
   NUMBER="${3^^}"
 fi
 
-if ! [[ "$IBASE" =~ ^[0-9]+$ ]]
+if ! [[ "$IBASE" =~ ^[0-9A-F]+$ ]]
 then
   echo "Input Base is not a number."
   PrintUsage
   exit 1
-elif ! [[ "$OBASE" =~ ^[0-9]+$ ]]
+elif ! [[ "$OBASE" =~ ^[0-9A-F]+$ ]]
 then
   echo "Output Base is not a number."
   PrintUsage
   exit 1
-elif ! [[ "$NUMBER" =~ ^[0-9]+$ ]]
+elif ! [[ "$NUMBER" =~ ^[0-9A-F]+$ ]]
 then
   echo "Input Number is not a number."
   PrintUsage
