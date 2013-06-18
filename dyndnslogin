@@ -7,12 +7,15 @@
 ########################################################################
 
 ########################################################################
-# DynDNS Settings
-USERNAME="username"
-PASSWORD="passwort"
+# DynDNS Settings (optional)
+DEFAULT_USERNAME="username"
+DEFAULT_PASSWORD="password"
 
 ########################################################################
 # Variabeln
+USERNAME=${1:-$DEFAULT_USERNAME}
+PASSWORD=${2:-$DEFAULT_PASSWORD}
+
 PROGNAME=dyndnslogin
 COOKIE=`mktemp --tmpdir="/tmp" -t ${PROGNAME}_cookie_XXXXX`
 OUTPUT=`mktemp --tmpdir="/tmp" -t ${PROGNAME}_output_XXXXX`
