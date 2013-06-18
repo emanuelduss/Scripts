@@ -49,8 +49,8 @@ case $1 in
     xrandr --output $INTERN --mode $CLONERES --output $EXTERN --same-as $INTERN --mode $CLONERES
     ;;
   extend)
-    xrandr --output $INTERN --auto --output $EXTERN --auto --right-of $INTERN
-    # xrandr --output $EXTERN --mode $EXTRES --pos 1280x0 --output $INTERN --mode $INTRES --pos 0x400
+     xrandr --output $INTERN --auto --pos 0x400 --output $EXTERN --auto --primary --pos 1280x0 --primary
+     # --right-of $INTERN funktioniert nicht zusammen mit --pos
     ;;
   -h)
     PrintUsage
