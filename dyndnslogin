@@ -7,7 +7,7 @@
 ########################################################################
 
 ########################################################################
-# DynDNS Settings (optional)
+# DynDNS Settings (default-value, overwrite with $1 and $2)
 DEFAULT_USERNAME="username"
 DEFAULT_PASSWORD="password"
 
