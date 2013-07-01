@@ -1,0 +1,33 @@
+########################################################################
+#
+# ddns-updater
+# Update Dynamic DNS Entries
+#
+########################################################################
+
+########################################################################
+# Variables
+KEYFILE="/etc/Kfoobar.example.org.+157+51053.private"
+NAMESERVER="ns.example.org"
+ZONE="example.org"
+HOSTNAME="foobar.example.org"
+TTL="60"
+
+########################################################################
+# Main
+if [ -z "$1" ]
+then
+  IPADDR="`curl -s ifconfig.me`"
+else
+  IPADDR="$1"
+fi
+
+(
+  echo "server $NAMESERVER"
+  echo "zone $ZONE"
+  echo "update delete $HOSTNAME"
+  echo "update add $HOSTNAME $TTL A $IPADDR"
+  echo "send"
+) | nsupdate -k $KEYFILE
+
+# EOF
