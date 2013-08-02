@@ -11,12 +11,12 @@
 DEFAULT_USERNAME="username"
 DEFAULT_PASSWORD="password"
 
-########################################################################
-# import Settings vom /etc/ddclient.conf if available
-DDCONF='/etc/ddclient.conf'
-if [ -r $DDCONF ] && $(grep -q ^server=members.dyndns.org $DDCONF) ; then
-    DEFAULT_USERNAME="$(grep ^login= $DDCONF | cut -f 2 -d =)"
-    DEFAULT_PASSWORD="$(grep ^password= $DDCONF | cut -f 2 -d =)"
+# Import settings from /etc/ddclient.conf if available
+DDCONF="/etc/ddclient.conf"
+if [ -r "$DDCONF" ] && grep -q "^server=members.dyndns.org" "$DDCONF"
+then
+    DEFAULT_USERNAME="`awk -F= '/^login=/{ print $2 }' $DDCONF`"
+    DEFAULT_PASSWORD="`awk -F= '/^password=/{ print $2 }' $DDCONF`"
 fi
 
 ########################################################################
