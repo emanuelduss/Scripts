@@ -8,6 +8,8 @@ My personal scripts.
 * `ddns-updater`: Update Dynamic DNS Entries
 * `dyndnslogin`: Automate DynDNS login to prevent account expiration
 * `hsrsync`: Synchronisiert mit dem Skripteserver der HSR
+* `imagerename`: Fotos nach Datum umbenennen
+* `imagerotate`: Dreht Fotos anhand des EXIF-Tag Orientation
 * `pic2vid`: Wandelt Fotos in ein Video um (Zeitraffer mit ffmpeg)
 * `propersuspend`: Computer sauber in den Standby setzen
 * `screenshot`: Wrapper für `scrot` um Screenshots zu erstellen
