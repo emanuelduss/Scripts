@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 ########################################################################
 #
 # dyndnslogin
@@ -10,6 +10,14 @@
 # DynDNS Settings (default-value, overwrite with $1 and $2)
 DEFAULT_USERNAME="username"
 DEFAULT_PASSWORD="password"
+
+########################################################################
+# import Settings vom /etc/ddclient.conf if available
+DDCONF='/etc/ddclient.conf'
+if [ -r $DDCONF ] && $(grep -q ^server=members.dyndns.org $DDCONF) ; then
+    DEFAULT_USERNAME="$(grep ^login= $DDCONF | cut -f 2 -d =)"
+    DEFAULT_PASSWORD="$(grep ^password= $DDCONF | cut -f 2 -d =)"
+fi
 
 ########################################################################
 # Variabeln
