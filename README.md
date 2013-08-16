@@ -10,6 +10,7 @@ My personal scripts.
 * `hsrsync`: Synchronisiert mit dem Skripteserver der HSR
 * `imagerename`: Fotos nach Datum umbenennen
 * `imagerotate`: Dreht Fotos anhand des EXIF-Tag Orientation
+* `imageshrink`: Verkleinert alle Bilder im aktuellen Verzeichnis
 * `pic2vid`: Wandelt Fotos in ein Video um (Zeitraffer mit ffmpeg)
 * `propersuspend`: Computer sauber in den Standby setzen
 * `screenshot`: Wrapper für `scrot` um Screenshots zu erstellen
