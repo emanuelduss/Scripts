@@ -39,7 +39,7 @@ curl -s --location -A "$USERAGENT" -b $COOKIE -c $COOKIE -o $OUTPUT \
   --data "username=$USERNAME&password=$PASSWORD&iov_id=&submit=Log+in&multiform=$MULTIFORM" \
   https://account.dyn.com/
 
-if grep -E "(Welcome|Hi).*$USERNAME" $OUTPUT > /dev/null 2>&1
+if grep -i -E "(Welcome|Hi).*$USERNAME" $OUTPUT > /dev/null 2>&1
 then
   echo Login successful
 else
