@@ -8,6 +8,7 @@ My personal scripts.
 * `ddns-updater`: Update Dynamic DNS Entries
 * `dyndnslogin`: Automate DynDNS login to prevent account expiration
 * `hsrsync`: Synchronisiert mit dem Skripteserver der HSR
+* `httpshare`: Simple share a file over HTTP
 * `imagerename`: Fotos nach Datum umbenennen
 * `imagerotate`: Dreht Fotos anhand des EXIF-Tag Orientation
 * `imageshrink`: Verkleinert alle Bilder im aktuellen Verzeichnis
