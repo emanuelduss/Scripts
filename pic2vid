@@ -71,7 +71,7 @@ do
     echo "$file: Foto $COUNT von $TOTAL ($((100 * $COUNT / $TOTAL))%)"
     convert -resize $SIZE -quality $QUALITY "$file" "${PICDIR}/$file" 
   fi
-  COUNT=$((COUNT + 1))
+  ((COUNT++))
 done
 
 # Fotos umbenennen (in Form wie 0001.jpg bis 2342.jpg)
@@ -86,9 +86,9 @@ do
     echo "Datei $file bereits umbenannt. OK."
   else
     # Symlink statt umbenennen, damit die Prüfung ob schon konvertiert auch funktioniert
-    ln -s $file "`printf %0${LENGTH}d $NUMBER`".jpg
+    ln -s "$file" "`printf %0${LENGTH}d $NUMBER`".jpg
   fi
-  NUMBER=$((NUMBER + 1))
+  ((NUMBER++))
 done
 
 # Bilder mit ffmpeg zu Video zusammenfügen
