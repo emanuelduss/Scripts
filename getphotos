@@ -1,0 +1,44 @@
+#!/bin/bash
+######################################################################
+#
+# getphotos
+# Fotos von der Kamera herunterladen und abspeichern
+#
+# 2010-07-26; Emanuel Duss; Erste Version
+#
+######################################################################
+
+######################################################################
+# Variabeln
+ORDNER=`date +GetPhotos_%Y-%m-%d`
+
+######################################################################
+# Main
+
+# Erstelle Foto-Ordner
+mkdir $ORDNER
+cd $ORDNER
+
+# Alle Fotos von der Digitalkamera holen
+gphoto2 --get-all-files
+
+# Fotos nach dem EXIF-Tag rotieren und Rotationsflag entfernen
+jhead -autorot *.[jJ][pP][gG]
+jhead -norot *.[jJ][pP][gG]
+
+# Fotos nach Datum umbenennen
+jhead -nf%Y-%m-%d_%H-%M-%S *.[jJ][pP][gG]
+
+# Pro Tag ein Ordner erstellen
+mkdir `ls *.jpg | cut -c 1-10 | sort -u`
+
+# Fotos in das dazugehörige Verzeichnis verschieben
+ls *.jpg | cut -c 1-10 | sort -u | while read line
+do
+  mv $line*.jpg $line
+done
+
+cd ..
+chown -R emanuel.users $ORDNER
+
+# EOF

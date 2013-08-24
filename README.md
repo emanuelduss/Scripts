@@ -7,6 +7,7 @@ My personal scripts.
 * `baseconv`: Convert numbers from one base to another
 * `ddns-updater`: Update Dynamic DNS Entries
 * `dyndnslogin`: Automate DynDNS login to prevent account expiration
+* `getphotos`: Fotos von der Kamera herunterladen und abspeichern
 * `hsrsync`: Synchronisiert mit dem Skripteserver der HSR
 * `httpshare`: Simple share a file over HTTP
 * `imagerename`: Fotos nach Datum umbenennen
