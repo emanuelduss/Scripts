@@ -39,17 +39,17 @@ case $1 in
     xrandr -q
     ;;
   intern)
-    xrandr --output $INTERN --auto --output $EXTERN --off
+    xrandr --output "$INTERN" --auto --output "$EXTERN" --off
     ;;
   extern)
-    xrandr --output $INTERN --off --output $EXTERN --auto
+    xrandr --output "$INTERN" --off --output "$EXTERN" --auto
     ;;
   clone)
-    CLONERES=`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort | uniq -d | head -1`
-    xrandr --output $INTERN --mode $CLONERES --output $EXTERN --same-as $INTERN --mode $CLONERES
+    CLONERES="`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort | uniq -d | head -1`"
+    xrandr --output "$INTERN" --mode "$CLONERES" --output "$EXTERN" --same-as "$INTERN" --mode "$CLONERES"
     ;;
   extend)
-     xrandr --output $INTERN --auto --pos 0x400 --output $EXTERN --auto --primary --pos 1280x0 --primary
+     xrandr --output "$INTERN" --auto --pos 0x400 --output "$EXTERN" --auto --primary --pos 1280x0 --primary
      # --right-of $INTERN funktioniert nicht zusammen mit --pos
     ;;
   -h)
@@ -62,7 +62,7 @@ case $1 in
     ;;
 esac
 
-if [ -f ~/.fehbg ]
+if [ -f "~/.fehbg" ]
 then
   eval `cat ~/.fehbg`
 fi
