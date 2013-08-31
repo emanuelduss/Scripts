@@ -23,16 +23,16 @@ PrintUsage() {
 # Main
 case $1 in
   mount)
-    echo cryptsetup luksOpen $LV $NAME
-    cryptsetup luksOpen $LV $NAME
-    echo mount /dev/mapper/secure $MOUNTPATH
-    mount /dev/mapper/secure $MOUNTPATH
+    echo cryptsetup luksOpen "$LV" "$NAME"
+    cryptsetup luksOpen "$LV" "$NAME"
+    echo mount /dev/mapper/secure "$MOUNTPATH"
+    mount /dev/mapper/secure "$MOUNTPATH"
     ;;
   umount)
-    echo umount $MOUNTPATH
-    umount $MOUNTPATH
-    echo cryptsetup luksClose /dev/mapper/$NAME
-    cryptsetup luksClose /dev/mapper/$NAME
+    echo umount "$MOUNTPATH"
+    umount "$MOUNTPATH"
+    echo cryptsetup luksClose "/dev/mapper/$NAME"
+    cryptsetup luksClose "/dev/mapper/$NAME"
     ;;
   *)
     PrintUsage
