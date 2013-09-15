@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 ########################################################################
 #
 # hsrsync
@@ -8,38 +8,39 @@
 
 ########################################################################
 # Variabeln
-DSTDIR=/home/emanuel/Daten/Studium/Skripteserver_Semester_2_FS13
-MNTDIR=/media/hsr/skripte
-SRCDIR="$MNTDIR/Informatik/Fachbereich/Betriebssysteme_2/Bsys2 \
-  $MNTDIR/Informatik/Fachbereich/Computernetze_2/CN2 \
-  $MNTDIR/Informatik/Fachbereich/Computernetze_2/CN2Prak \
-  $MNTDIR/Informatik/Fachbereich/Programmieren_2_Algorithmen_und_Datenstrukturen/AD \
-  $MNTDIR/Mathematik_Naturwissenschaften/Analysis_2_fuer_Informatiker/An2I \
-  $MNTDIR/Kommunikation_Wirtschaft_Recht/Business_und_Recht_2 \
-  $MNTDIR/Mathematik_Naturwissenschaften/Mathematische_Grundlagen_der_Informatik_2/Math2I"
-  # $MNTDIR/Kommunikation_Wirtschaft_Recht/English_The_World_of_Science \
+DSTDIR="/home/emanuel/Daten/Studium/Semester_3_HS13_Skripteserver"
+MNTDIR="/media/hsr/skripte"
+SRCDIR="$MNTDIR/Mathematik_Naturwissenschaften/Physik_1/Ph1Mech/Cossmann \
+  $MNTDIR/Mathematik_Naturwissenschaften/Wahrscheinlichkeitsrechnung_und_Statistik/WrStat \
+  $MNTDIR/Informatik/Fachbereich/Programmieren_3_C++11/Prog3 \
+  $MNTDIR/Informatik/Fachbereich/Software-Engineering_1/SE1 \
+  $MNTDIR/Informatik/Fachbereich/Informations-_und_Codierungstheorie/ICTh \
+  $MNTDIR/Informatik/Fachbereich/User_Interfaces_1/UInt1 \
+  $MNTDIR/Informatik/Fachbereich/Datenbanksysteme_1/Dbs1 \
+  $MNTDIR/Kommunikation_Wirtschaft_Recht/Rhetorische_Kommunikation_fuer_IngenieurInnen/RKI/Bohr"
 
 ########################################################################
 # Main
-if ! mountpoint $MNTDIR > /dev/null 2>&1
+if ! mountpoint "$MNTDIR" > /dev/null 2>&1
 then
-  echo $MNTDIR ist nicht gemountet. Mounte...
-  if ! mount $MNTDIR
+  echo "$MNTDIR ist nicht gemountet. Mounte..."
+  if ! mount "$MNTDIR"
   then
-    echo Fehler: Verzeichnis $MNTDIR kann nicht gemountet werden!
+    echo "Fehler: Verzeichnis $MNTDIR kann nicht gemountet werden!"
     exit 1
   fi
 fi
 
-if ! [ -d $DSTDIR ]
+if ! [ -d "$DSTDIR" ]
 then
-  echo $DSTDIR existiert nicht
+  echo "$DSTDIR existiert nicht"
   exit 1
 fi
 
-rsync -ahvz --progress --delete --exclude "Thumbs.db" $SRCDIR $DSTDIR
+rsync -ahvz --progress --delete --exclude "*.lnk" --exclude "Desktop.ini" \
+  --exclude "Thumbs.db" $SRCDIR "$DSTDIR"
 
 echo Totale Grösse:
-du -hs $DSTDIR
+du -hs "$DSTDIR"
 
 # EOF
