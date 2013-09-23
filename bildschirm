@@ -67,4 +67,6 @@ then
   eval `cat ~/.fehbg`
 fi
 
+pkill -HUP conky 2>&1 >/dev/null
+
 # EOF
