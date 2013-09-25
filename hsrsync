@@ -38,7 +38,7 @@ then
 fi
 
 rsync -ahvz --progress --delete --exclude "*.lnk" --exclude "Desktop.ini" \
-  --exclude "Thumbs.db" $SRCDIR "$DSTDIR"
+  --exclude "Thumbs.db" --exclude "*Vorlesung.mpg" $SRCDIR "$DSTDIR"
 
 echo Totale Grösse:
 du -hs "$DSTDIR"
