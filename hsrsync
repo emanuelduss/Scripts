@@ -9,7 +9,7 @@
 ########################################################################
 # Variabeln
 DSTDIR="/home/emanuel/Daten/Studium/Semester_3_HS13_Skripteserver"
-MNTDIR="/media/hsr/skripte"
+MNTDIR="/media/hsr_skripte"
 SRCDIR="$MNTDIR/Mathematik_Naturwissenschaften/Physik_1/Ph1Mech/Cossmann \
   $MNTDIR/Mathematik_Naturwissenschaften/Wahrscheinlichkeitsrechnung_und_Statistik/WrStat \
   $MNTDIR/Informatik/Fachbereich/Programmieren_3_C++11/Prog3 \
