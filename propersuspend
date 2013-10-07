@@ -19,6 +19,8 @@ then
   mpc pause >/dev/null 2>&1
 fi
 
+pkill mplayer >/dev/null 2>&
+
 $LOCKCMD
 $SUSPENDCMD
 
