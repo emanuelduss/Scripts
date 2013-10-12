@@ -32,7 +32,7 @@ mkdir $FOLDER
 for datei in *.[Jj][Pp][Gg]
 do
   COUNT="`expr $COUNT + 1`"
-  echo "$datei: Foto $COUNT von $TOTAL \(`expr 100 \* $COUNT / $TOTAL`%\)"
+  echo "$datei: Foto $COUNT von $TOTAL (`expr 100 \* $COUNT / $TOTAL`%)"
   convert -resize "$SIZE" -quality "$QUALITY" "$datei" "small/$datei" 
 done
 
