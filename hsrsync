@@ -39,7 +39,7 @@ fi
 
 rsync -ahvz --progress --delete --exclude "*.lnk" --exclude "Desktop.ini" \
   --exclude "Thumbs.db" --exclude ".DS_Store" --exclude "ICTh/Vidios" \
-  $SRCDIR "$DSTDIR"
+  --exclude "Screenrecording*.mp4" \ $SRCDIR "$DSTDIR"
 
 echo Totale Grösse:
 du -hs "$DSTDIR"
