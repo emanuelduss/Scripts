@@ -41,6 +41,13 @@ rsync -ahvz --progress --delete --exclude "*.lnk" --exclude "Desktop.ini" \
   --exclude "Thumbs.db" --exclude ".DS_Store" --exclude "ICTh/Videos" \
   --exclude "Screenrecording*.mp4" $SRCDIR "$DSTDIR"
 
+if umount $MNTDIR >/dev/null 2>&1
+then
+  echo "$MNTDIR wurde ausgehängt"
+else
+  echo "$MNTDIR bleibt gemountet"
+fi
+
 echo Totale Grösse:
 du -hs "$DSTDIR"
 
