@@ -1,0 +1,8 @@
+#!/bin/bash
+
+LOGFILE="/tmp/clang"
+PARAMS="-std=c++11"
+#PARAMS="-std=c++11 -stdlib=libc++ -lc++abi"
+
+echo "`date \"+%Y-%m-%d %H:%M:%S\"` $0 $PARAMS $@" >> $LOGFILE
+/usr/sbin/clang $PARAMS $@

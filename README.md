@@ -5,6 +5,7 @@ My personal scripts.
 
 * `bildschirm`: A xrandr wrapper for screen settings
 * `baseconv`: Convert numbers from one base to another
+* `clang++`: Wrapper for C++11 Support in `clang++`
 * `ddns-updater`: Update Dynamic DNS Entries
 * `dyndnslogin`: Automate DynDNS login to prevent account expiration
 * `fehshow`: Öffnet alle Bilder im Verzeichnis statt nur ein Bild in feh
