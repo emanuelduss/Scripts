@@ -13,6 +13,7 @@
 # Variabeln
 INTERN="LVDS1"
 EXTERN="VGA1"
+WAIT="2" # Sekunden
 
 ######################################################################
 # Funktionen
@@ -62,11 +63,18 @@ case $1 in
     ;;
 esac
 
-if [ -f "~/.fehbg" ]
+if [ -f ~/.fehbg ]
 then
-  eval `cat ~/.fehbg`
+  (sleep "$WAIT"
+    eval `cat ~/.fehbg`
+  ) &
 fi
 
-pkill -HUP conky 2>&1 >/dev/null
+if pgrep conky &>/dev/null
+then
+  (sleep "$WAIT"
+    pkill -HUP conky 2>&1 >/dev/null
+  ) &
+fi
 
 # EOF

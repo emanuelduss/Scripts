@@ -8,9 +8,9 @@
 
 ########################################################################
 # Variabeln
-MOUNTPATH="/home/emanuel/secure"
-LV="/dev/mapper/rootvg-secure"
-NAME="secure"
+NAME="backup"
+MOUNTPATH="/media/$NAME"
+LV="/dev/mapper/$NAME"
 
 ########################################################################
 # Funktionen
