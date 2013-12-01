@@ -46,7 +46,7 @@ case $1 in
     xrandr --output "$INTERN" --off --output "$EXTERN" --auto
     ;;
   clone)
-    CLONERES="`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort | uniq -d | head -1`"
+    CLONERES="`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort -n | uniq -d | tail -1`"
     xrandr --output "$INTERN" --mode "$CLONERES" --output "$EXTERN" --same-as "$INTERN" --mode "$CLONERES"
     ;;
   extend)
