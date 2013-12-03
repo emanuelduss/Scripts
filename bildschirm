@@ -53,6 +53,12 @@ case $1 in
      xrandr --output "$INTERN" --auto --pos 0x400 --output "$EXTERN" --auto --primary --pos 1280x0 --primary
      # --right-of $INTERN funktioniert nicht zusammen mit --pos
     ;;
+  dialog)
+    MODE=$(zenity  --list  --text "Bildschirm Mode auswählen" \
+      --radiolist  --column "Mode" --column "Beschreibung" \
+      TRUE "Intern" FALSE "Extern" FALSE "Clone")
+    $0 ${MODE,,}
+    ;;
   -h)
     PrintUsage
     exit
