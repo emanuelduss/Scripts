@@ -9,6 +9,7 @@ My personal scripts.
 * `ddns-updater`: Update Dynamic DNS Entries
 * `dyndnslogin`: Automate DynDNS login to prevent account expiration
 * `fehshow`: Öffnet alle Bilder im Verzeichnis statt nur ein Bild in feh
+* `firewall`: Host Firewall mit `iptables`
 * `getphotos`: Fotos von der Kamera herunterladen und abspeichern
 * `hsrsync`: Synchronisiert mit dem Skripteserver der HSR
 * `httpshare`: Simple share a file over HTTP

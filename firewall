@@ -1,0 +1,206 @@
+#!/bin/bash
+#
+# firewall - iptables script
+# Emanuel Duss
+#
+
+IPTABLESCONFIG="/etc/iptables/iptables.rules"
+IP6TABLESCONFIG="/etc/iptables/ip6tables.rules"
+IPTABLES="/sbin/iptables"
+IP6TABLES="/sbin/ip6tables"
+IPTABLES_SAVE="/sbin/iptables-save"
+IP6TABLES_SAVE="/sbin/ip6tables-save"
+MODPROBE="/sbin/modprobe"
+SYSCTL="/sbin/sysctl"
+
+help(){
+cat << EOI
+Usage:
+  firewall (start|stop|status|save|help)
+EOI
+}
+
+start(){
+  echo "[+] Starting firewall... "
+
+  $IPTABLES -F INPUT
+  $IP6TABLES -F INPUT
+  $IPTABLES -F OUTPUT
+  $IP6TABLES -F OUTPUT
+  $IPTABLES -F FORWARD
+  $IP6TABLES -F FORWARD
+
+  $IPTABLES -P INPUT DROP
+  $IP6TABLES -P INPUT DROP
+  $IPTABLES -P OUTPUT DROP
+  $IP6TABLES -P OUTPUT DROP
+  $IPTABLES -P FORWARD DROP
+  $IP6TABLES -P FORWARD DROP
+
+  $IPTABLES -A INPUT -i lo -j ACCEPT
+  $IP6TABLES -A INPUT -i lo -j ACCEPT
+  $IPTABLES -A OUTPUT -o lo -j ACCEPT
+  $IP6TABLES -A OUTPUT -o lo -j ACCEPT
+
+  output_chain
+  input_chain
+  hardening
+
+  echo "[+] Firewall started"
+}
+
+stop(){
+  echo -n "[+] Stopping firewall... "
+
+  $IPTABLES -F INPUT
+  $IP6TABLES -F INPUT
+  $IPTABLES -F OUTPUT
+  $IP6TABLES -F OUTPUT
+  $IPTABLES -F FORWARD
+  $IP6TABLES -F FORWARD
+
+  $IPTABLES -P INPUT ACCEPT
+  $IP6TABLES -P INPUT ACCEPT
+  $IPTABLES -P OUTPUT ACCEPT
+  $IP6TABLES -P OUTPUT ACCEPT
+  $IPTABLES -P FORWARD ACCEPT
+  $IP6TABLES -P FORWARD ACCEPT
+
+  echo "Done."
+}
+
+status(){
+  echo "[+] iptables:"
+  $IPTABLES --version
+  $IPTABLES -vnL --line-numbers
+  echo "[+] ip6tables:"
+  $IP6TABLES --version
+  $IP6TABLES -vnL --line-numbers
+}
+
+save(){
+  echo -n "[+] Saving iptables rules... "
+  $IPTABLES_SAVE > "$IPTABLESCONFIG"
+  echo "Done. (`wc -l $IPTABLESCONFIG | cut -d' ' -f1` Lines saved.)"
+  echo -n "[+] Saving ip6tables rules... "
+  $IP6TABLES_SAVE > "$IP6TABLESCONFIG"
+  echo "Done. (`wc -l $IP6TABLESCONFIG | cut -d' ' -f1` Lines saved.)"
+}
+
+input_chain(){
+  echo -n "[+] Applying input rules... "
+
+  # Stateful
+  $IPTABLES -A INPUT -m conntrack --ctstate INVALID -j LOG --log-prefix "DROP INVALID " --log-ip-options --log-tcp-options
+  $IPTABLES -A INPUT -m conntrack --ctstate INVALID -j DROP
+  $IPTABLES -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+  # Accept
+  $IPTABLES -A INPUT -p icmp --icmp-type echo-request -m state --state NEW -j ACCEPT
+  $IPTABLES -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j LOG --log-prefix "ALLOW SSH IN "
+  $IPTABLES -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT # SSH
+  $IPTABLES -A INPUT -p tcp --dport 6600 -m conntrack --ctstate NEW -m mac --mac-source 5C:0A:5B:93:3B:CB -j LOG --log-prefix "ALLOW MPD IN "
+  $IPTABLES -A INPUT -p tcp --dport 6600 -m conntrack --ctstate NEW -m mac --mac-source 5C:0A:5B:93:3B:CB -j ACCEPT # MPD Telefon
+
+  # Drop
+  $IPTABLES -A INPUT -p tcp --dport 23 -m conntrack --ctstate NEW -j LOG --log-prefix "DROP Telnet IN" # Telnet
+  $IPTABLES -A INPUT -p tcp --dport 23 -m conntrack --ctstate NEW -j DROP
+  $IPTABLES -A INPUT -m addrtype --dst-type BROADCAST -j DROP
+
+  # Log
+  $IPTABLES -A INPUT ! -i lo -j LOG --log-prefix "DROP IN " --log-ip-options --log-tcp-options
+
+  echo  "Done."
+}
+
+output_chain(){
+  echo -n "[+] Applying output rules... "
+
+  # Stateful
+  $IPTABLES -A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+  # Accept
+  $IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -m conntrack --ctstate NEW -j ACCEPT # ICMP echo-request
+  $IPTABLES -I OUTPUT -p udp --dport 67:68 -m conntrack --ctstate NEW -j ACCEPT # DHCP
+  $IPTABLES -A OUTPUT -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT # DNS
+  $IP6TABLES -A OUTPUT -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
+  $IPTABLES -A OUTPUT -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
+  $IP6TABLES -A OUTPUT -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
+  $IPTABLES -A OUTPUT -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT # HTTP
+  $IP6TABLES -A OUTPUT -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT
+  $IPTABLES -A OUTPUT -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT # HTTPS
+  $IP6TABLES -A OUTPUT -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT
+  $IPTABLES -A OUTPUT -p tcp --dport 21 -m conntrack --ctstate NEW -j ACCEPT # FTP (nf_conntrack_ftp muss geladen sein)
+  $IPTABLES -A OUTPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT # SSH
+  $IP6TABLES -A OUTPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT
+  $IPTABLES -A OUTPUT -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT # Whois
+  $IPTABLES -A OUTPUT -p udp --dport 123 -m conntrack --ctstate NEW -j ACCEPT # NTP
+  $IPTABLES -A OUTPUT -p tcp --dport 5222 -m conntrack --ctstate NEW -j ACCEPT # XMPP
+  $IPTABLES -A OUTPUT -p udp --dport 5222 -m conntrack --ctstate NEW -j ACCEPT
+  $IPTABLES -A OUTPUT -p tcp --dport 6667 -m conntrack --ctstate NEW -j ACCEPT # IRC
+  $IPTABLES -A OUTPUT -p tcp --dport 6697 -m conntrack --ctstate NEW -j ACCEPT
+  $IPTABLES -A OUTPUT -p tcp --dport 465 -m conntrack --ctstate NEW -j ACCEPT # SMTP Gmail
+  $IPTABLES -A OUTPUT -p tcp --dport 993 -m conntrack --ctstate NEW -j ACCEPT # IMAPS
+  $IPTABLES -A OUTPUT -p udp --dport 1194 -m conntrack --ctstate NEW -j ACCEPT # OpenVPN
+  $IPTABLES -A OUTPUT -p tcp --dport 9418 -m conntrack --ctstate NEW -j ACCEPT # GIT
+  $IPTABLES -A OUTPUT -p udp --dport 9418 -m conntrack --ctstate NEW -j ACCEPT
+  $IPTABLES -A OUTPUT -p udp --dport 137 -m conntrack --ctstate NEW -j ACCEPT # Samba; NETBIOS Name Service
+  $IPTABLES -A OUTPUT -p udp --dport 138 -m conntrack --ctstate NEW -j ACCEPT # Samba; NETBIOS Datagram Service
+  $IPTABLES -A OUTPUT -p tcp --dport 139 -m conntrack --ctstate NEW -j ACCEPT # Samba; NETBIOS Session Service
+  $IPTABLES -A OUTPUT -p tcp --dport 445 -m conntrack --ctstate NEW -j ACCEPT # Samba; Microsoft-DS
+  $IPTABLES -A OUTPUT -p tcp --dport 6969 -m conntrack --ctstate NEW -j ACCEPT # Bittorrent; Kommunikation mit Tracker
+  $IPTABLES -A OUTPUT -p tcp --dport 6881:6889 -m conntrack --ctstate NEW -j ACCEPT # Bittorrent; Kommunikation mit anderen Clients (Download/Upload von Files)
+
+  echo  "Done."
+}
+
+hardening(){
+  echo -n "[+] Hardening..."
+
+  $IPTABLES -A INPUT -p tcp --syn -m limit --limit 1/s -j ACCEPT # SYN-Flood
+  $IPTABLES -A INPUT -p icmp --icmp-type echo-request -m limit --limit 1/s -j ACCEPT # Ping-of-Death
+  $IPTABLES -A INPUT -p tcp ! --syn -m state --state NEW -j DROP # Neue Verbindungen müssen SYN Pakete sein
+  $IPTABLES -A INPUT -p tcp --tcp-flags ALL ALL -j DROP # XMAS-Scan blockieren
+  $IPTABLES -A INPUT -p tcp --tcp-flags ALL NONE -j DROP # NULL-Scan blockieren
+
+  # SSH Bruteforce
+  $IPTABLES -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --set --name SSH -j ACCEPT
+  $IPTABLES -A INPUT -p tcp --dport 22 -m recent --update --seconds 60 --hitcount 4 --rttl \
+    --name SSH -j LOG --log-prefix "SSH_brute_force "
+  $IPTABLES -A INPUT -p tcp --dport 22 -m recent --update --seconds 60 \
+    --hitcount 4 --rttl --name SSH -j DROP
+
+  # PortScan verhindern
+  # $IPTABLES -A INPUT -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s -j LOG
+  # $IPTABLES -A INPUT -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s -j ACCEPT
+
+  # $IPTABLES -A INPUT -m limit --limit 30/minute -j LOG --log-level warning --log-tcp-options --log-ip-options --log-prefix "Firewall Log_all_in "
+
+  #/sbin/iptables -A INPUT -p tcp --dport 55022 -m state --state NEW -m recent --set --name SSH
+  #/sbin/iptables -A INPUT -p tcp --dport 55022 -m state --state NEW -m recent \
+    # --rcheck --seconds 60 --hitcount 4 --rttl --name SSH -j REJECT ---reject-with tcp-reset
+
+  # iptables -A INPUT -p tcp --dport 80 -m limit --limit 25/minute --limit-burst 100 -j ACCEPT
+
+  $SYSCTL -q -w net.ipv4.tcp_syncookies=1
+  $SYSCTL -q -w net.ipv4.icmp_echo_ignore_broadcasts=1 # Smurf-Attack
+
+  echo  "Done."
+}
+
+if [ "$UID" -ne "0" ]
+then
+  echo "[!] Only root can run this script."
+  exit 1
+fi
+
+case "$1"
+in
+  "start") start ;;
+  "stop") stop ;;
+  "restart") stop; start ;;
+  "status") status ;;
+  "save") save ;;
+  "help") help ;;
+  *) help; exit 1 ;;
+esac
