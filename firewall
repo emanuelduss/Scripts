@@ -98,7 +98,7 @@ input_chain(){
   $IPTABLES -A INPUT -m addrtype --dst-type BROADCAST -j DROP
 
   # Log
-  $IP46TABLES -A INPUT ! -i lo -j LOG --log-prefix "DROP_IN " --log-ip-options --log-tcp-options # Log all other packages
+  $IP46TABLES -A INPUT ! -i lo -m limit --limit 1/min --limit-burst 1 -j LOG --log-prefix "DROP_IN " --log-ip-options --log-tcp-options # Log all other packages
 
   echo  "Done."
 }
