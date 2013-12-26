@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# vi: set nowrap
+#
 # firewall - iptables script
 # Emanuel Duss
 #
@@ -79,9 +81,14 @@ input_chain(){
 
   $IP46TABLES -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT -m comment --comment "Stateful"
 
-  $IPTABLES -A INPUT -p icmp --icmp-type echo-request -m state --state NEW -j ACCEPT -m comment --comment "ICMP_Echo-Request"
+  $IPTABLES -A INPUT -p icmp --icmp-type echo-request -m state --state NEW -j ACCEPT -m comment --comment "ICMP_echo-request"
+  $IP6TABLES -A INPUT -p icmpv6 --icmpv6-type router-advertisement -j ACCEPT -m comment --comment "ICMPv6_router-advertisement"
+  $IP6TABLES -A INPUT -p icmpv6 --icmpv6-type router-solicitation -j ACCEPT -m comment --comment "ICMPv6_router-solicitation"
+  $IP6TABLES -A INPUT -p icmpv6 --icmpv6-type neighbour-advertisement -j ACCEPT -m comment --comment "ICMPv6_neighbour-advertisement"
+  $IP6TABLES -A INPUT -p icmpv6 --icmpv6-type neighbour-solicitation -j ACCEPT -m comment --comment "ICMPv6_neighbour-solicitation"
+  $IP6TABLES -A INPUT -p icmpv6 --icmpv6-type echo-request -j ACCEPT -m comment --comment "ICMPv6_echo-request"
+  $IP6TABLES -A INPUT -p icmpv6 --icmpv6-type echo-reply -j ACCEPT -m comment --comment "ICMPv6_echo-reply"
 
-  # SSH
   $IP46TABLES -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -m recent --set --name SSH --rsource -m comment --comment "SSH"
   $IP46TABLES -A INPUT -p tcp --dport 22 -m recent --rcheck --seconds 30 --hitcount 5 --rttl --name SSH --rsource -m limit --limit 1/min --limit-burst 1 -j LOG --log-prefix "SSH_Brute-Force"
   $IP46TABLES -A INPUT -p tcp --dport 22 -m recent --update --seconds 30 --hitcount 5 --rttl --name SSH --rsource -j REJECT --reject-with tcp-reset -m comment --comment "Accept_SSH_IN"
@@ -110,8 +117,14 @@ output_chain(){
   # Stateful
   $IP46TABLES -A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 
-  # Accept
-  $IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "ICMP_Echo-Request"
+  $IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "ICMP_echo-request"
+  $IP6TABLES -A OUTPUT -p icmpv6 --icmpv6-type router-advertisement -j ACCEPT -m comment --comment "ICMPv6_router-advertisement"
+  $IP6TABLES -A OUTPUT -p icmpv6 --icmpv6-type router-solicitation -j ACCEPT -m comment --comment "ICMPv6_router-solicitation"
+  $IP6TABLES -A OUTPUT -p icmpv6 --icmpv6-type neighbour-advertisement -j ACCEPT -m comment --comment "ICMPv6_neighbour-advertisement"
+  $IP6TABLES -A OUTPUT -p icmpv6 --icmpv6-type neighbour-solicitation -j ACCEPT -m comment --comment "ICMPv6_neighbour-solicitation"
+  $IP6TABLES -A OUTPUT -p icmpv6 --icmpv6-type echo-request -j ACCEPT -m comment --comment "ICMPv6_echo-request"
+  $IP6TABLES -A OUTPUT -p icmpv6 --icmpv6-type echo-reply -j ACCEPT -m comment --comment "ICMPv6_echo-reply"
+
   $IP46TABLES -A OUTPUT -p tcp --dport 21 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "FTP" # (nf_conntrack_ftp muss geladen sein)
   $IP46TABLES -A OUTPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "SSH"
   $IP46TABLES -A OUTPUT -p tcp --dport 23 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Telnet"
@@ -175,11 +188,11 @@ hardening(){
   $IP46TABLES -A INPUT -p tcp ! --syn -m conntrack --ctstate NEW -m limit --limit 1/min --limit-burst 1 -j LOG --log-ip-options --log-tcp-options --log-prefix "New_connection_not_SYN" -m comment --comment "New_connection_not_SYN "
   $IP46TABLES -A INPUT -p tcp ! --syn -m conntrack --ctstate NEW -j DROP -m comment --comment "New_connection_not_SYN "
 
-  $IP46TABLES -A INPUT -m conntrack --ctstate INVALID -m limit --limit 1/min --limit-burst 1 -j LOG --log-ip-options --log-tcp-options --log-prefix "DROP_INVALID "
-  $IP46TABLES -A INPUT -m conntrack --ctstate INVALID -j DROP -m comment --comment "Invalid_Packets "
-
   $IP46TABLES -A INPUT -p tcp -m multiport --dports 23,5900 --tcp-flags ALL SYN -m limit --limit 1/m --limit-burst 1 -j LOG --log-prefix "SYN-Scan_Trap" -m comment --comment "SYN-Scan_Trap"
   $IP46TABLES -A INPUT -p tcp -m multiport --dports 23,5900 --tcp-flags ALL SYN -j DROP -m comment --comment "SYN-Scan_Trap"
+
+  # $IP46TABLES -A INPUT -m conntrack --ctstate INVALID -m limit --limit 1/h --limit-burst 1 -j LOG --log-ip-options --log-tcp-options --log-prefix "DROP_INVALID "
+  $IP46TABLES -A INPUT -m conntrack --ctstate INVALID -j DROP -m comment --comment "Invalid_Packets "
 
   # DOS Attacks (Denial of service)
 
@@ -203,4 +216,3 @@ in
   *) help; exit 1 ;;
 esac
 
-# vim: set nowrap
