@@ -142,6 +142,7 @@ output_chain(){
   $IP46TABLES -A OUTPUT -p tcp --dport 443 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "HTTPS"
   $IP46TABLES -A OUTPUT -p tcp --dport 445 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Samba_Microsoft-DS"
   $IP46TABLES -A OUTPUT -p tcp --dport 465 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "SMTP_Gmail"
+  $IP46TABLES -A OUTPUT -p tcp --dport 587 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "SMTP_submission"
   $IP46TABLES -A OUTPUT -p udp --dport 500 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "VPN_ISAKMP"
   $IP46TABLES -A OUTPUT -p tcp --dport 993 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "IMAPS"
   $IP46TABLES -A OUTPUT -p udp --dport 1194 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "OpenVPN"
