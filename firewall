@@ -103,6 +103,7 @@ input_chain(){
   $IP46TABLES -A INPUT -p tcp --dport 23 -m conntrack --ctstate NEW -m limit --limit 1/min --limit-burst 1 -j LOG --log-prefix "Drop_Telnet_IN " -m comment --comment "Telnet"
   $IP46TABLES -A INPUT -p tcp --dport 23 -m conntrack --ctstate NEW -j DROP
   $IPTABLES -A INPUT -m addrtype --dst-type BROADCAST -j DROP
+  $IPTABLES -A INPUT -m addrtype --dst-type MULTICAST -j DROP
 
   # Log
   $IP46TABLES -A INPUT ! -i lo -m limit --limit 1/min --limit-burst 1 -j LOG --log-prefix "DROP_IN " --log-ip-options --log-tcp-options # Log all other packages
