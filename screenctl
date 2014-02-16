@@ -1,70 +1,86 @@
 #!/bin/bash
-######################################################################
 #
-# bildschirm
-# Bildschirme steuern und verwalten
+# screenctl - Control and manage your screen
 #
-# Copyright (c) 2011-2013 Emanuel Duss
+# Copyright (c) 2011-2014 Emanuel Duss
 # Licensed under GNU General Public License
 #
-######################################################################
 
-######################################################################
-# Variabeln
-INTERN="LVDS1"
-EXTERN="VGA1"
-WAIT="2" # Sekunden
+INTERNAL="LVDS1"
+EXTERNAL="VGA1"
+WAIT="2" # Seconds
 
-######################################################################
-# Funktionen
-
-PrintUsage(){
+print_usage(){
 cat << EOI
 Usage:
- bildschirm < modes | intern | extern | clone | extend >
+ screenctl OPTION
 
-Optionen:
-  modes    Moegliche Modes ausgeben
-  intern   Nur internen Bildschirm verwenden
-  extern   Nur externer Bildschirm verwenden
-  clone    Gleiche Ausgabe auf beiden Bildschirmen
-  extend   Bild auf externem Bildschirm erweitern
-
+Options:
+  modes          List available modes
+  help           Show help message
+  dialog         Show graphical menu
+  internal       Use internal display only
+  external       Use extern display only
+  clone          Show same content on internal and external display
+  extend [POS]   Use internal and external screen as one desktop
+                 POS = { left | right }
 EOI
 }
 
-######################################################################
-# Main
 case $1 in
-  modes)
+  "modes")
     xrandr -q
     ;;
-  intern)
-    xrandr --output "$INTERN" --auto --output "$EXTERN" --off
+  "internal")
+    xrandr --output "$INTERNAL" --auto --output "$EXTERNAL" --off
     ;;
-  extern)
-    xrandr --output "$INTERN" --off --output "$EXTERN" --auto
+  "external")
+    xrandr --output "$INTERNAL" --off --output "$EXTERNAL" --auto
     ;;
-  clone)
+  "clone")
     CLONERES="`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort -n | uniq -d | tail -1`"
-    xrandr --output "$INTERN" --mode "$CLONERES" --output "$EXTERN" --same-as "$INTERN" --mode "$CLONERES"
+    xrandr --output "$INTERNAL" --mode "$CLONERES" \
+           --output "$EXTERNAL" --same-as "$INTERNAL" --mode "$CLONERES"
     ;;
-  extend)
-     xrandr --output "$INTERN" --auto --pos 0x400 --output "$EXTERN" --auto --primary --pos 1280x0 --primary
-     # --right-of $INTERN funktioniert nicht zusammen mit --pos
+  "extend")
+    case $2 in
+      "left")
+        xrandr --output "$INTERNAL" --auto \
+               --output "$EXTERNAL" --auto --left-of "$INTERNAL" --primary
+      ;;
+      "right")
+        xrandr --output "$INTERNAL" --auto \
+               --output "$EXTERNAL" --auto --right-of "$INTERNAL" --primary
+      ;;
+      "")
+        xrandr --output "$INTERNAL" --auto --pos 0x400 \
+               --output "$EXTERNAL" --auto --pos 1280x0 --primary
+      ;;
+      *)
+        print_usage
+        exit 1
+      ;;
+    esac
     ;;
-  dialog)
-    MODE=$(zenity  --list  --text "Bildschirm Mode auswählen" \
-      --radiolist  --column "Mode" --column "Beschreibung" \
-      TRUE "Intern" FALSE "Extern" FALSE "Clone")
-    $0 ${MODE,,}
+  "dialog")
+    MODE=$(zenity  --list  --text "Select screen mode:" \
+      --radiolist  --column "Mode" --column "Description" \
+      TRUE "Internal" \
+      FALSE "External" \
+      FALSE "Clone" \
+      FALSE "Extend" \
+      FALSE "Extend Left" \
+      FALSE "Extend Right")
+    if [ -n "$MODE" ]
+    then
+      $0 ${MODE,,}
+    fi
     ;;
-  -h)
-    PrintUsage
-    exit
+  "-h")
+    print_usage
     ;;
   *)
-    PrintUsage
+    print_usage
     exit 1
     ;;
 esac
@@ -82,5 +98,3 @@ then
     pkill -HUP conky 2>&1 >/dev/null
   ) &
 fi
-
-# EOF
