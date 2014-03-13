@@ -79,7 +79,7 @@ save(){
 input_chain(){
   echo -n "[+] Applying input rules... "
 
-  $IP46TABLES -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT -m comment --comment "Stateful"
+  $IP46TABLES -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT -m comment --comment "Stateful_INPUT"
 
   $IPTABLES -A INPUT -p icmp --icmp-type echo-request -m state --state NEW -j ACCEPT -m comment --comment "ICMP_echo-request"
   $IP6TABLES -A INPUT -p icmpv6 --icmpv6-type router-advertisement -j ACCEPT -m comment --comment "ICMPv6_router-advertisement"
@@ -115,8 +115,7 @@ input_chain(){
 output_chain(){
   echo -n "[+] Applying output rules... "
 
-  # Stateful
-  $IP46TABLES -A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+  $IP46TABLES -A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT -m comment --comment "Stateful_OUTPUT"
 
   $IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "ICMP_echo-request"
   $IP6TABLES -A OUTPUT -p icmpv6 --icmpv6-type router-advertisement -j ACCEPT -m comment --comment "ICMPv6_router-advertisement"
@@ -131,11 +130,11 @@ output_chain(){
   $IP46TABLES -A OUTPUT -p tcp --dport 23 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Telnet"
   $IP46TABLES -A OUTPUT -p tcp --dport 43 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Whois"
   $IP46TABLES -A OUTPUT -p udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "DNS_TCP"
-  $IP46TABLES -A OUTPUT -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment 'DNS_UDP'
+  $IP46TABLES -A OUTPUT -p tcp --dport 53 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "DNS_UDP"
   $IP46TABLES -I OUTPUT -p udp --dport 67:68 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "DHCP"
   $IP46TABLES -A OUTPUT -p tcp --dport 80 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "HTTP"
   $IP46TABLES -A OUTPUT -p udp --dport 123 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "NTP"
-  $IP46TABLES -A OUTPUT -p udp --dport 137 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment 'Samba_NETBIOS_Name_Service'
+  $IP46TABLES -A OUTPUT -p udp --dport 137 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Samba_NETBIOS_Name_Service"
   $IP46TABLES -A OUTPUT -p udp --dport 138 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Samba_NETBIOS_Datagram_Service"
   $IP46TABLES -A OUTPUT -p tcp --dport 139 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Samba_NETBIOS_Session_Service"
   $IP46TABLES -A OUTPUT -p tcp --dport 143 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "IMAP"
