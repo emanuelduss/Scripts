@@ -8,8 +8,12 @@
 
 ########################################################################
 # DynDNS Settings (default-value, overwrite with $1 and $2)
+# If you have special chars in your password, you need to urlencode:
+# python -c "from urllib.parse import quote;
+#   print(quote('your password', safe=''))"
 DEFAULT_USERNAME="username"
 DEFAULT_PASSWORD="password"
+
 
 # Import settings from /etc/ddclient.conf if available
 DDCONF="/etc/ddclient.conf"
