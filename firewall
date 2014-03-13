@@ -155,6 +155,7 @@ output_chain(){
   $IP46TABLES -A OUTPUT -p tcp --dport 6881:6889 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Bittorrent_Clients"
   $IP46TABLES -A OUTPUT -p tcp --dport 9418 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "GIT"
   $IP46TABLES -A OUTPUT -p udp --dport 9418 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "GIT"
+  $IP46TABLES -A OUTPUT -p tcp --dport 11371 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "PGP_Keyserver_Communication"
 
   echo  "Done."
 }
