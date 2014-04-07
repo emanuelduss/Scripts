@@ -8,16 +8,16 @@
 
 ########################################################################
 # Variabeln
-DSTDIR="/home/emanuel/Daten/Studium/Semester_3_HS13_Skripteserver"
+DSTDIR="/home/emanuel/Daten/Studium/Semester_4_FS14_Skripteserver"
 MNTDIR="/media/hsr_skripte"
-SRCDIR="$MNTDIR/Mathematik_Naturwissenschaften/Physik_1/Ph1Mech/Cossmann \
-  $MNTDIR/Mathematik_Naturwissenschaften/Wahrscheinlichkeitsrechnung_und_Statistik/WrStat \
-  $MNTDIR/Informatik/Fachbereich/Programmieren_3_C++11/Prog3 \
-  $MNTDIR/Informatik/Fachbereich/Software-Engineering_1/SE1 \
-  $MNTDIR/Informatik/Fachbereich/Informations-_und_Codierungstheorie/ICTh \
-  $MNTDIR/Informatik/Fachbereich/User_Interfaces_1/UInt1 \
-  $MNTDIR/Informatik/Fachbereich/Datenbanksysteme_1/Dbs1 \
-  $MNTDIR/Kommunikation_Wirtschaft_Recht/Rhetorische_Kommunikation_fuer_IngenieurInnen/RKI/Bohr"
+SRCDIR="$MNTDIR/Informatik/Fachbereich/Challenge_Projekte/ChallP/ChallP-FS14-CyberSecurityTrainingsCamp \
+  $MNTDIR/Informatik/Fachbereich/Datenbanksysteme_2/Dbs2 \
+  $MNTDIR/Informatik/Fachbereich/Informationssicherheit_1_-_Grundlagen/InfSi1 \
+  $MNTDIR/Informatik/Fachbereich/Parallele_Programmierung/ParProg \
+  $MNTDIR/Mathematik_Naturwissenschaften/Physik_4_fuer_Informatiker \
+  $MNTDIR/Informatik/Fachbereich/Software-Engineering_2/SE2 \
+  $MNTDIR/Informatik/Fachbereich/Verteilte_SW-Systeme/Vss \
+  $MNTDIR/Kommunikation_Wirtschaft_Recht/Volkswirtschaft_und_Technikgeschichte"
 
 ########################################################################
 # Main
@@ -38,8 +38,9 @@ then
 fi
 
 rsync -ahvz --progress --delete --exclude "*.lnk" --exclude "Desktop.ini" \
-  --exclude "Thumbs.db" --exclude ".DS_Store" --exclude "ICTh/Videos" \
-  --exclude "Screenrecording*.mp4" $SRCDIR "$DSTDIR"
+  --exclude "Thumbs.db" --exclude ".DS_Store" --exclude "Vss/2013" \
+  --exclude "Dbs2/Admin/FS1[123]" --exclude "sqldeveloper-2*" \
+  $SRCDIR "$DSTDIR"
 
 if umount $MNTDIR >/dev/null 2>&1
 then
