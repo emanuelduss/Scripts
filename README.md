@@ -20,6 +20,7 @@ My personal scripts.
 * `propersuspend`: Computer sauber in den Standby setzen
 * `screenshot`: Wrapper für `scrot` um Screenshots zu erstellen
 * `securelv`: Mount a LUKS encrypted Logical Volume
+* `sshfpgen`: Creates SSHFP Records vor all available keys
 * `wecker`: A very useful alarm clock / sleep timer
 
 The source code is licensed under GNU General Public License.
