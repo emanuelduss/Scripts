@@ -1,0 +1,37 @@
+#!/bin/bash
+
+PrintUsage(){
+  cat << EOI
+Usage: qrscan
+
+Select range or click into a window to scan the qrcode(s).
+Uses scrot and zbar.
+EOI
+}
+
+if (($# >= 1))
+then
+  PrintUsage
+  exit
+fi
+
+if ! hash scrot 2>/dev/null && hash zbarimg 2>/dev/null
+then
+  echo "Could not find scrot and zbar."
+  exit 1
+fi
+
+IMAGE="$(mktemp --tmpdir="/tmp" scanqr_XXXXX.png)"
+trap 'rm "$IMAGE"' EXIT
+
+if ! scrot -s "$IMAGE" 2>/dev/null
+then
+  echo "Could not take image."
+  exit 1
+fi
+
+if ! zbarimg -q --raw "$IMAGE"
+then
+  echo "Could not read code."
+  exit 1
+fi

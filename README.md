@@ -18,6 +18,7 @@ My personal scripts.
 * `imageshrink`: Verkleinert alle Bilder im aktuellen Verzeichnis
 * `pic2vid`: Wandelt Fotos in ein Video um (Zeitraffer mit ffmpeg)
 * `propersuspend`: Computer sauber in den Standby setzen
+* `qrscan`: QR-Code scanner
 * `screenshot`: Wrapper für `scrot` um Screenshots zu erstellen
 * `securelv`: Mount a LUKS encrypted Logical Volume
 * `sshfpgen`: Creates SSHFP Records vor all available keys
