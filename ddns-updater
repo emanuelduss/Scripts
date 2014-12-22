@@ -1,26 +1,24 @@
 #!/bin/bash
-########################################################################
 #
-# ddns-updater
-# Update Dynamic DNS Entries
+# ddns-updater - Update dynamic dns entries
 #
-########################################################################
 
-########################################################################
-# Variables
-KEYFILE="/etc/Kfoobar.example.org.+157+51053.private"
-NAMESERVER="ns.example.org"
-ZONE="example.org"
-HOSTNAME="foobar.example.org"
-TTL="60"
+CONF="${1:-/etc/ddns-updater.conf}"
+. $CONF
 
-########################################################################
-# Main
-if [ -z "$1" ]
+if [[ -z "$KEYFILE" || -z "$NAMESERVER" || -z "$ZONE" \
+   || -z "$HOSTNAME" || -z "$TTL" ]]
 then
-  IPADDR="`curl -s ifconfig.me`"
-else
-  IPADDR="$1"
+  echo "Error loading configuration file $CONF"
+  exit 1
+fi
+
+IPADDR="${CUSTOMIP:-$(dig myip.opendns.com @resolver1.opendns.com +short)}"
+IPADDROLD="$(dig $HOSTNAME @$NAMESERVER +short)"
+
+if [[ "$IPADDR" == "$IPADDROLD" ]]
+then
+  exit
 fi
 
 (
@@ -29,6 +27,4 @@ fi
   echo "update delete $HOSTNAME"
   echo "update add $HOSTNAME $TTL A $IPADDR"
   echo "send"
-) | nsupdate -k $KEYFILE
-
-# EOF
+) | nsupdate -v -k $KEYFILE
