@@ -4,6 +4,7 @@ KEY="$1"
 SECUREDEVICE="/dev/${2:-sdc1}"
 SECUREDEVICENAME="securegpg"
 SECUREHOME="/media/securegpg"
+SECUREGPGDIR="$SECUREHOME/.gnupg"
 
 PrintUsage(){
   cat <<< EOI
@@ -41,10 +42,10 @@ read
 cryptsetup luksOpen "$SECUREDEVICE" "$SECUREDEVICENAME"
 mount "/dev/mapper/$SECUREDEVICENAME" "$SECUREHOME"
 
-gpg --export "$KEY"  | gpg --homedir "$SECUREHOME" --import
-gpg --homedir "$SECUREHOME" --sign-key "$KEY"
-gpg --homedir "$SECUREHOME" --send-keys "$KEY"
-gpg --homedir "$SECUREHOME" --export "$KEY" | gpg --import
+gpg --export "$KEY"  | gpg --homedir "$SECUREGPGDIR" --import
+gpg --homedir "$SECUREGPGDIR" --sign-key "$KEY"
+gpg --homedir "$SECUREGPGDIR" --send-keys "$KEY"
+gpg --homedir "$SECUREGPGDIR" --export "$KEY" | gpg --import
 
 pkill gpg-agent
 
