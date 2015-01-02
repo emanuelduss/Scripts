@@ -9,6 +9,7 @@ PrintUsage(){
   cat <<< EOI
 Usage:
   securegpgsign key [devicename]
+  securegpgsign -h | --help
 
 Default Device name is sdc1
 
