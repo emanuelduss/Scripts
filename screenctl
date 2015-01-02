@@ -85,6 +85,8 @@ case $1 in
     ;;
 esac
 
+xrandr --dpi 80
+
 if [ -f ~/.fehbg ]
 then
   (sleep "$WAIT"
