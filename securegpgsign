@@ -1,0 +1,51 @@
+#!/bin/bash
+
+KEY="$1"
+SECUREDEVICE="/dev/${2:-sdc1}"
+SECUREDEVICENAME="securegpg"
+SECUREHOME="/media/securegpg"
+
+PrintUsage(){
+  cat <<< EOI
+Usage:
+  securegpgsign key [devicename]
+
+Default Device name is sdc1
+
+Examples:
+  securegpgsign 0x23FOOBA2
+  securegpgsign 0x23FOOBA2 sde
+
+EOI
+}
+
+if  [[ $TEST == "-h" || $TEST == "--help" ]]
+then
+  PrintUsage
+fi
+
+if (($# < 1))
+then
+  PrintUsage
+  exit 1
+fi
+
+gpg --recv-key "$KEY"
+gpg --fingerprint "$KEY"
+
+echo "Is the fingerprint correct?"
+echo "Press Enter to continue or ^C to canel."
+read
+
+cryptsetup luksOpen "$SECUREDEVICE" "$SECUREDEVICENAME"
+mount "/dev/mapper/$SECUREDEVICENAME" "$SECUREHOME"
+
+gpg --export "$KEY"  | gpg --homedir "$SECUREHOME" --import
+gpg --homedir "$SECUREHOME" --sign-key "$KEY"
+gpg --homedir "$SECUREHOME" --send-keys "$KEY"
+gpg --homedir "$SECUREHOME" --export "$KEY" | gpg --import
+
+pkill gpg-agent
+
+umount "$SECUREHOME"
+cryptsetup luksClose "/dev/mapper/$SECUREDEVICENAME"

@@ -20,6 +20,7 @@ My personal scripts.
 * `propersuspend`: Computer sauber in den Standby setzen
 * `qrscan`: QR-Code scanner
 * `screenshot`: Wrapper für `scrot` um Screenshots zu erstellen
+* `securegpgsign`: Sign GPG Keys with offline Primary Key on encrypted USB Device
 * `securelv`: Mount a LUKS encrypted Logical Volume
 * `sshfpgen`: Creates SSHFP Records vor all available keys
 * `wecker`: A very useful alarm clock / sleep timer
