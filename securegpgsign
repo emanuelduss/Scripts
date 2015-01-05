@@ -21,7 +21,7 @@ Examples:
 EOI
 }
 
-if  [[ $TEST == "-h" || $TEST == "--help" ]]
+if  [[ $1 == "-h" || $1 == "--help" ]]
 then
   PrintUsage
 fi
