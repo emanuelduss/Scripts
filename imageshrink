@@ -27,7 +27,7 @@ QUALITY="75"
 ########################################################################
 # Main
 
-mkdir $FOLDER
+mkdir "$FOLDER"
 
 for datei in *.[Jj][Pp][Gg]
 do
