@@ -3,12 +3,11 @@
 # Creates SSHFP Records vor all available keys
 #
 
-HOST="$1"
+HOST="${1-$(hostname -f)}"
 
-if (($# < 1))
+if [[ "$1" == "-h" || "$1" == "--help" ]]
 then
   echo "Usage: sshfpgen <hostname>"
-  exit 1
 fi
 
 for pubkey in /etc/ssh/ssh_host_*_key.pub
