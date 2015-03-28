@@ -1,23 +1,12 @@
 #!/bin/bash
-########################################################################
 #
-# fehshow
-# Öffnet alle Bilder im Verzeichnis statt nur ein Bild in feh
+# fehshow - Wrapper for feh for a nice image display
 #
-########################################################################
 
-
-########################################################################
-# Variabeln
 FILETYPES='*.jpg *.JPG *.png *.PNG *.gif *.GIF *.jpeg *.JPEG'
-
-########################################################################
-# Main
 
 cd `dirname "$1"`
 FILE=`basename "$1"`
 feh -q $FILETYPES --auto-zoom --sort filename \
   --borderless --scale-down --draw-filename --image-bg black \
   --start-at "$FILE"
-
-# EOF
