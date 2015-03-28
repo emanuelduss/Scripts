@@ -1,13 +1,7 @@
 #!/bin/bash
-################################################################
 #
-# imagerotate
-# Dreht Fotos anhand des EXIF-Tag Orientation
+# imagerotate - Rotate images due to EXIF infos
 #
-################################################################
-
-########################################################################
-# Main
 
 if [ "$#" -eq "0" ]
 then
@@ -15,6 +9,3 @@ then
 else
   jhead -autorot $@
 fi
-
-
-# EOF
