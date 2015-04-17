@@ -12,18 +12,16 @@ fi
 
 if which openssl >/dev/null 2>&1
 then
-  # openssl version only works the same as coreutils for stdin
-  # unless the -r option is given; but older openssl on some BSD lack it
   if ! which sha1sum >/dev/null 2>&1
   then
     sha1sum() {
-      openssl dgst -sha1
+      openssl dgst -sha1 | grep -E -o "[0-9a-f]{40}"
     }
   fi
   if ! which sha256sum >/dev/null 2>&1
   then
     sha256sum() {
-      openssl dgst -sha256
+      openssl dgst -sha256 | grep -E -o "[0-9a-f]{64}"
     }
   fi
 fi
