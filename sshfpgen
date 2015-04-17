@@ -15,13 +15,13 @@ then
   if ! which sha1sum >/dev/null 2>&1
   then
     sha1sum() {
-      openssl dgst -sha1 $*
+      openssl dgst -sha1 -r $*
     }
   fi
   if ! which sha256sum >/dev/null 2>&1
   then
     sha256sum() {
-      openssl dgst -sha256 $*
+      openssl dgst -sha256 -r $*
     }
   fi
 fi
