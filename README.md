@@ -25,5 +25,6 @@ My personal scripts.
 * `securelv`: Mount a LUKS encrypted Logical Volume
 * `sshfpgen`: Creates SSHFP Records vor all available keys
 * `wecker`: A very useful alarm clock / sleep timer
+* `wordpress-lazyest-thumbs`: Created 120x120 Thumbnails for the WordPress Lazyest Gallery
 
 The source code is licensed under GNU General Public License.

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+mkdir thumbs
+for i in *.jpg
+do
+  convert $i -resize 120x120^ -gravity Center -crop 120x120+0+0 +repage thumbs/$i
+done
