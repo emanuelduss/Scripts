@@ -1,20 +1,10 @@
 #!/bin/bash
-######################################################################
 #
-# wecker
-# An alarm for your console
+# wecker - Use your computer as an alarm clock
 #
-# Copyright (c) 2013 Emanuel Duss
-# Licensed under GNU General Public License
-#
-######################################################################
 
-######################################################################
-# Variabeln
 NOW=`date +%s`
 
-######################################################################
-# Funktionen
 PrintUsage() {
   echo "Usage:
   wecker option <params>
@@ -37,9 +27,6 @@ PrintUsage() {
     wecker disable
       The computer will not start automatically"
 }
-
-######################################################################
-# Main
 
 case "$1" in
   "set")
@@ -147,5 +134,3 @@ case "$1" in
     exit 1
     ;;
 esac
-
-# EOF

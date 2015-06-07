@@ -1,9 +1,6 @@
 #!/bin/bash
 #
-# screenctl - Control and manage your screen
-#
-# Copyright (c) 2011-2014 Emanuel Duss
-# Licensed under GNU General Public License
+# screenctl - Control settings for external monitors
 #
 
 INTERNAL="LVDS1"
@@ -93,7 +90,7 @@ xrandr --dpi 80
 if [ -f ~/.fehbg ]
 then
   (sleep "$WAIT"
-    eval `cat ~/.fehbg`
+    ~/.fehbg
   ) &
 fi
 

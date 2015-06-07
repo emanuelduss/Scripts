@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
-########################################################################
 #
-# dyndnslogin
-# Automate login to prevent account expiration
+# dyndnslogin - Automate login to prevent account expiration
 #
-########################################################################
 
 ########################################################################
 # DynDNS Settings (default-value, overwrite with $1 and $2)
@@ -23,8 +20,6 @@ then
     DEFAULT_PASSWORD="`awk -F= '/^password=/{ print $2 }' $DDCONF`"
 fi
 
-########################################################################
-# Variabeln
 USERNAME=${1:-$DEFAULT_USERNAME}
 PASSWORD=${2:-$DEFAULT_PASSWORD}
 
@@ -32,9 +27,6 @@ PROGNAME=dyndnslogin
 COOKIE=`mktemp --tmpdir="/tmp" -t ${PROGNAME}_cookie_XXXXX`
 OUTPUT=`mktemp --tmpdir="/tmp" -t ${PROGNAME}_output_XXXXX`
 USERAGENT="Mozilla/5.0"
-
-########################################################################
-# Main
 
 MULTIFORM=`curl -s -A $USERAGENT -c $COOKIE https://account.dyn.com \
   | awk -F\' '/multiform/{ print $6 }'`
@@ -58,5 +50,3 @@ if [ "$FAILED" = "true" ]
 then
   exit 1
 fi
-
-# EOF

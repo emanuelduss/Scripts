@@ -1,9 +1,6 @@
 #!/bin/bash
 #
-# vi: set nowrap
-#
-# firewall - iptables script
-# Emanuel Duss
+# firewall - iptables firewall
 #
 
 IPTABLES="/sbin/iptables"
@@ -90,8 +87,8 @@ input_chain(){
   $IP6TABLES -A INPUT -p icmpv6 --icmpv6-type echo-reply -j ACCEPT -m comment --comment "ICMPv6_echo-reply"
 
   $IP46TABLES -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -m recent --set --name SSH --rsource -m comment --comment "SSH"
-  $IP46TABLES -A INPUT -p tcp --dport 22 -m recent --rcheck --seconds 30 --hitcount 5 --rttl --name SSH --rsource -m limit --limit 1/min --limit-burst 1 -j LOG --log-prefix "SSH_Brute-Force"
-  $IP46TABLES -A INPUT -p tcp --dport 22 -m recent --update --seconds 30 --hitcount 5 --rttl --name SSH --rsource -j REJECT --reject-with tcp-reset -m comment --comment "Accept_SSH_IN"
+  $IP46TABLES -A INPUT -p tcp --dport 22 -m recent --rcheck --seconds 60 --hitcount 4 --rttl --name SSH --rsource -m limit --limit 1/min --limit-burst 1 -j LOG --log-prefix "SSH_Brute-Force"
+  $IP46TABLES -A INPUT -p tcp --dport 22 -m recent --update --seconds 60 --hitcount 4 --rttl --name SSH --rsource -j REJECT --reject-with tcp-reset -m comment --comment "Accept_SSH_IN"
   $IP46TABLES -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j LOG --log-prefix "Accept_SSH_IN"
   $IP46TABLES -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Accept_SSH_IN"
 
@@ -146,6 +143,7 @@ output_chain(){
   $IP46TABLES -A OUTPUT -p tcp --dport 993 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "IMAPS"
   $IP46TABLES -A OUTPUT -p udp --dport 1194 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "OpenVPN"
   $IP46TABLES -A OUTPUT -p tcp --dport 2305 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "SSH_2305"
+  $IP46TABLES -A OUTPUT -p tcp --dport 3690 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "SVN"
   $IP46TABLES -A OUTPUT -p udp --dport 4500 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "VPN_IPSEC-NAT"
   $IP46TABLES -A OUTPUT -p tcp --dport 5222 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "XMPP_TCP"
   $IP46TABLES -A OUTPUT -p udp --dport 5222 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "XMPP_UDP"
@@ -153,8 +151,9 @@ output_chain(){
   $IP46TABLES -A OUTPUT -p tcp --dport 6697 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "IRC"
   $IP46TABLES -A OUTPUT -p tcp --dport 6969 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Bittorrent_Tracker"
   $IP46TABLES -A OUTPUT -p tcp --dport 6881:6889 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "Bittorrent_Clients"
+  $IP46TABLES -A OUTPUT -p tcp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "HTTP-Alt"
   $IP46TABLES -A OUTPUT -p tcp --dport 9418 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "GIT"
-  $IP46TABLES -A OUTPUT -p udp --dport 9418 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "GIT"
+  $IP46TABLES -A OUTPUT -p tcp --dport 9418 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "GIT"
   $IP46TABLES -A OUTPUT -p tcp --dport 11371 -m conntrack --ctstate NEW -j ACCEPT -m comment --comment "PGP_Keyserver_Communication"
 
   echo  "Done."
@@ -217,4 +216,3 @@ in
   "help") help ;;
   *) help; exit 1 ;;
 esac
-

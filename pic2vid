@@ -1,16 +1,8 @@
 #!/bin/bash
-########################################################################
 #
-# pic2vid
-# Konvertiert mehrere Fotos zu einem Video (Zeitraffer)
+# pic2vid - Konvertiert mehrere Fotos zu einem Video (Zeitraffer)
 #
-# GNU General Public License
-# 2012 by Emanuel Duss
-#
-########################################################################
 
-########################################################################
-# Variabeln
 DIR="$1"
 PICDIR="pic2vid"
 SMALLDIR="$DIR/$PICDIR"
@@ -20,17 +12,11 @@ OUTPUTFILE="output.mpg"
 CODEC="libx264"
 FRAMESPERSECOND="25"
 
-########################################################################
-# Funktionen
 Printusage () {
   echo "Usage:
   $0 directory"
 }
 
-########################################################################
-# Main
-
-# Prüfe Fehler
 if [ -z "$1" ]
 then
   Printusage
@@ -59,7 +45,6 @@ fi
 cd $DIR
 
 
-# Fotos verkleinern (nur, wenn noch nicht verkleinert)
 TOTAL="`ls *.[Jj][Pp][Gg] | wc -l`"
 COUNT="1"
 for file in *.[Jj][Pp][Gg]
@@ -74,7 +59,7 @@ do
   ((COUNT++))
 done
 
-# Fotos umbenennen (in Form wie 0001.jpg bis 2342.jpg)
+# Rename pictures (like 0001.jpg to 2342.jpg)
 cd $PICDIR
 LENGTH="`ls *.[Jj][Pp][Gg] | wc -l | wc -L`"
 NUMBER="1"
@@ -91,7 +76,5 @@ do
   ((NUMBER++))
 done
 
-# Bilder mit ffmpeg zu Video zusammenfügen
+# create the video
 ffmpeg -f image2 -i %0${LENGTH}d.jpg -r $FRAMESPERSECOND -vcodec $CODEC ../$OUTPUTFILE
-
-# EOF

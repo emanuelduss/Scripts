@@ -1,18 +1,11 @@
 #!/bin/bash
-########################################################################
 #
-# httpshare
-# Simple share a file over HTTP
+# httpshare - Simple share a file over HTTP
 #
-########################################################################
 
-########################################################################
-# Variabeln
 FILE="$1"
 PORT="${2:-8080}" # Use 8080 if $2 not set
 
-########################################################################
-# Functions
 PrintUsage () {
   echo "Usage:
   httpshare file [port]"
@@ -21,9 +14,6 @@ ExitServer(){
   echo "Stop webserver"
   exit
 }
-
-########################################################################
-# Main
 
 trap ExitServer SIGINT SIGTERM
 
@@ -45,7 +35,5 @@ while true
 do
    ( echo -e 'HTTP/1.1 200 OK\r\n'
      cat "$1"
-   ) | nc -l "$PORT" || ExitServer
+   ) | nc -l -p "$PORT" || ExitServer
 done
-
-# EOF

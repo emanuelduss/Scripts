@@ -26,5 +26,6 @@ fi
   echo "zone $ZONE"
   echo "update delete $HOSTNAME"
   echo "update add $HOSTNAME $TTL A $IPADDR"
+  echo "update add $HOSTNAME $TTL AAAA $IP6ADDR"
   echo "send"
 ) | nsupdate -v -k $KEYFILE

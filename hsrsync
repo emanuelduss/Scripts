@@ -1,13 +1,8 @@
 #!/bin/bash
-########################################################################
 #
-# hsrsync
-# Synchronisiert Verzeichnisse der HSR
+# hsrsync - Sync HSR Skripteserver
 #
-########################################################################
 
-########################################################################
-# Variabeln
 DSTDIR="/home/emanuel/Daten/Studium/Semester_4_FS14_Skripteserver"
 MNTDIR="/media/hsr_skripte"
 SRCDIR="$MNTDIR/Informatik/Fachbereich/Challenge_Projekte/ChallP/ChallP-FS14-CyberSecurityTrainingsCamp \
@@ -19,8 +14,6 @@ SRCDIR="$MNTDIR/Informatik/Fachbereich/Challenge_Projekte/ChallP/ChallP-FS14-Cyb
   $MNTDIR/Informatik/Fachbereich/Verteilte_SW-Systeme/Vss \
   $MNTDIR/Kommunikation_Wirtschaft_Recht/Volkswirtschaft_und_Technikgeschichte"
 
-########################################################################
-# Main
 if ! mountpoint "$MNTDIR" > /dev/null 2>&1
 then
   echo "$MNTDIR ist nicht gemountet. Mounte..."
@@ -51,5 +44,3 @@ fi
 
 echo Totale Grösse:
 du -hs "$DSTDIR"
-
-# EOF

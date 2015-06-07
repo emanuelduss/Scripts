@@ -1,18 +1,11 @@
 #!/usr/bin/bash
-########################################################################
 #
-# baseconv
-# Convert numbers from one base to another
+# baseconv - Convert numbers from one base to another
 #
-########################################################################
 
-########################################################################
-# Variables
 FROM=10
 TO=10
 
-########################################################################
-# Functions
 PrintUsage() {
   echo "Convert numbers from one base to another
 
@@ -20,10 +13,6 @@ PrintUsage() {
     baseconv from to number"
 }
 
-########################################################################
-# Main
-
-# Check Arguments
 if [ "$#" -ne "3" ]
 then
   echo "You need to enter 3 numbers."
@@ -54,5 +43,3 @@ fi
 
 # Let's convert!
 bc <<< "obase=$OBASE; ibase=$IBASE; $NUMBER"
-
-# EOF

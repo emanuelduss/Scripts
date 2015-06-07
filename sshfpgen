@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Creates SSHFP Records for all available keys
+# sshfpgen - Creates SSHFP Records for all available keys
 #
 
 HOST="${1-$(hostname -f)}"
