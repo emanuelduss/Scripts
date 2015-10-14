@@ -3,5 +3,6 @@
 mkdir thumbs
 for i in *.jpg
 do
+  echo -n .
   convert $i -resize 120x120^ -gravity Center -crop 120x120+0+0 +repage thumbs/$i
 done
