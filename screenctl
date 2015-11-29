@@ -3,10 +3,6 @@
 # screenctl - Control settings for external monitors
 #
 
-INTERNAL="LVDS1"
-EXTERNAL="VGA1"
-WAIT="2" # Seconds
-
 print_usage(){
 cat << EOI
 Usage:
@@ -24,43 +20,56 @@ Options:
 EOI
 }
 
+INTERNAL="`xrandr | awk '/ connected/{n = 1; if(++i == n){screen = $1; exit}} END{print screen}'`"
+EXTERNAL="`xrandr | awk '/ connected/{n = 2; if(++i == n){screen = $1; exit}} END{print screen}'`"
+WAIT="2" # Seconds
+
 case $1 in
   "modes")
     xrandr -q
     ;;
   "internal")
-    xrandr --output "$INTERNAL" --auto --output "$EXTERNAL" --off
+    if [[ -n "$INTERNAL" ]]
+    then
+      xrandr --output "$INTERNAL" --auto --output "$EXTERNAL" --off
+    fi
     ;;
   "external")
-    if xrandr -q | grep -q "$EXTERNAL connected"
+    if [[ -n "$EXTERNAL" ]]
     then
       xrandr --output "$INTERNAL" --off --output "$EXTERNAL" --auto
     fi
     ;;
   "clone")
-    CLONERES="`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort -n | uniq -d | tail -1`"
-    xrandr --output "$INTERNAL" --mode "$CLONERES" \
-           --output "$EXTERNAL" --same-as "$INTERNAL" --mode "$CLONERES"
+    if [[ -n "$INTERNAL" && -n "$EXTERNAL" ]]
+    then
+      CLONERES="`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort -n | uniq -d | tail -1`"
+      xrandr --output "$INTERNAL" --mode "$CLONERES" \
+            --output "$EXTERNAL" --same-as "$INTERNAL" --mode "$CLONERES"
+    fi
     ;;
   "extend")
-    case $2 in
-      "left")
-        xrandr --output "$INTERNAL" --auto \
-               --output "$EXTERNAL" --auto --left-of "$INTERNAL" --primary
-      ;;
-      "right")
-        xrandr --output "$INTERNAL" --auto \
-               --output "$EXTERNAL" --auto --right-of "$INTERNAL" --primary
-      ;;
-      "")
-        xrandr --output "$INTERNAL" --auto --pos 0x400 \
-               --output "$EXTERNAL" --auto --pos 1280x0 --primary
-      ;;
-      *)
-        print_usage
-        exit 1
-      ;;
-    esac
+    if [[ -n "$INTERNAL" && -n "$EXTERNAL" ]]
+    then
+      case $2 in
+        "left")
+          xrandr --output "$INTERNAL" --auto \
+                --output "$EXTERNAL" --auto --left-of "$INTERNAL" --primary
+        ;;
+        "right")
+          xrandr --output "$INTERNAL" --auto \
+                --output "$EXTERNAL" --auto --right-of "$INTERNAL" --primary
+        ;;
+        "")
+          xrandr --output "$INTERNAL" --auto --pos 0x400 \
+                --output "$EXTERNAL" --auto --pos 1280x0 --primary
+        ;;
+        *)
+          print_usage
+          exit 1
+        ;;
+      esac
+      fi
     ;;
   "dialog")
     MODE=$(zenity  --list  --text "Select screen mode:" \
