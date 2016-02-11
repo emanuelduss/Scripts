@@ -17,6 +17,7 @@ My personal scripts.
 * `imagerotate`: Dreht Fotos anhand des EXIF-Tag Orientation
 * `imageshrink`: Verkleinert alle Bilder im aktuellen Verzeichnis
 * `magnify`: A simple screen magnifier.
+* `myip`: Displays IP addresses of the current host used for internet connections.
 * `pic2vid`: Wandelt Fotos in ein Video um (Zeitraffer mit ffmpeg)
 * `propersuspend`: Computer sauber in den Standby setzen
 * `qrscan`: QR-Code scanner
