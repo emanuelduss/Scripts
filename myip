@@ -29,7 +29,7 @@ print_public_ipv6_address(){
 }
 
 print_local_ipv4_address(){
-  echo "$(curl -s -2 -L --write-out %{local_ip} $IPURL -o /dev/null || echo "")"
+  echo "$(curl -s -4 -L --write-out %{local_ip} $IPURL -o /dev/null || echo "")"
 }
 
 print_local_ipv6_address(){
