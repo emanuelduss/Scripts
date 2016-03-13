@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if pgrep mpd >/dev/null 2>&1 && `which mpc` >/dev/null 2>&1
+then
+  mpc pause >/dev/null 2>&1
+fi
+
+pkill mplayer >/dev/null 2>&1
+i3lock -u --dpms -c 333333 --pointer default
