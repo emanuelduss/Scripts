@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+DATEFORMAT="%Y-%m-%d_%H-%M-%S"
+
+print_help(){
+cat << EOI
+Usage: fixjollaphotos file [files ...]
+
+This scripts does the following for your pictures taken by your Jolla phone:
+
+  * Add the EXIF timestamp according to the filesystem timestamp
+  * Renames the photo like YYYY-mm-dd_HH-MM-SS
+  * Rotates the photo correctly
+
+The tools exiftool and jhead must be installed.
+EOI
+}
+
+check_dependencies(){
+  FAIL=0
+  for tool in $@
+  do
+    if ! hash "$tool" &> /dev/null
+    then
+      echo "The tool $tool does not exist."
+      FAIL=1
+    fi
+  done
+  if [[ "$FAIL" == 1 ]]
+  then
+    exit 1
+  fi
+}
+
+fix_photo(){
+    echo -n Fixing "$file -> "
+
+    touch --reference="$file" $file.savedate
+    # Add dummy timestamp, so we can it modify later
+    exiftool -"DateTimeOriginal=1984:05:23 13:37:42" "$file" &> /dev/null
+    touch --reference="$file.savedate" $file
+
+    # Set EXIF timestamp to the file timestamp
+    jhead -dsft "$file" &> /dev/null
+    rm "$file.savedate"
+
+    # Correct timezone (Timestamp of file is UTC)
+    TIMEOFFSET="$(date +%:z)"
+    jhead -ta${TIMEOFFSET} "$file" &> /dev/null
+
+    # Rotate the photo
+    jhead -autorot "$file" &> /dev/null
+
+    # Rename the file, print new filename and OK
+    jhead -nf$DATEFORMAT "$file" | awk '{ ORS=""; print $NF }'
+    rm "${file}_original"
+
+    echo " [OK]"
+}
+
+main(){
+  check_dependencies jhead exiftool
+
+  for file in "$@"
+  do
+    fix_photo "$file"
+  done
+}
+
+main "$@"
