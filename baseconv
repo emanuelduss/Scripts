@@ -34,7 +34,7 @@ then
   echo "Output Base is not a number."
   PrintUsage
   exit 1
-elif ! [[ "$NUMBER" =~ ^[0-9A-F]+$ ]]
+elif ! [[ "$NUMBER" =~ ^[.0-9A-F]+$ ]]
 then
   echo "Input Number is not a number."
   PrintUsage
