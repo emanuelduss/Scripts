@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+print_help(){
+cat << EOI
+packtebooksrename
+
+This script renames the free learning eBooks from Packt Publishing to a more
+human friendly and more meaningful filename.
+
+Download a free eBooks here every day here:
+https://www.packtpub.com/packt/offers/free-learning
+
+Rename files like:
+9781783283378_code.zip    9781783283378-LEARNING_PYTHON_DESIGN_PATTERNS.pdf
+9781783283378.epub        9781783283378.mobi
+
+To the pattern "Title_in_Title_Case_PACKT_ISBN.ext":
+Learning_Python_Design_Patterns_PACKT_9781783283378{.pdf,.epub,.mobi,_code.zip}
+
+Usage:
+packtebooksrename <all the files>
+
+Where the files are the PDF, EPUB, MOBI or ZIP files from the website.
+The tool can rename multiple books at once.
+EOI
+}
+
+rename_files(){
+  echo "$@" | grep -o -E "[0-9]{13}" | sort -u | while read ISBN
+  do
+    PDF="$(echo $ISBN*.pdf | head -1)"
+    EPUB="$(echo $ISBN*.epub | head -1)"
+    MOBI="$(echo $ISBN*.mobi | head -1)"
+    CODE="$(echo $ISBN*.zip | head -1)"
+
+    TITLE="$(echo $PDF | sed 's/[^-]*-\(.*\).pdf/\1/' | \
+      sed 's/.*/\L&/; s/[a-z]*/\u&/g')" # Title_Case_Like_Title
+    FILENAME="${TITLE}_PACKT_${ISBN}"
+
+    echo "[*] Processing $TITLE ($ISBN)... "
+
+    mv "$PDF" "$FILENAME.pdf"
+
+    if [[ -f "$EPUB" ]]
+    then
+      mv "$EPUB" "$FILENAME.epub"
+    fi
+
+    if [[ -f "$MOBI" ]]
+    then
+      mv "$MOBI" "$FILENAME.mobi"
+    fi
+
+    if [[ -f "$CODE" ]]
+    then
+      mv "$CODE" "${FILENAME}_code.zip"
+    fi
+  done
+}
+
+main(){
+  if [[ "$#" == 0 ]]
+  then
+    print_help
+  fi
+
+  rename_files "$@"
+}
+
+main "$@"

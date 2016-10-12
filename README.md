@@ -20,6 +20,7 @@ My personal scripts.
 * `magnify`: A simple screen magnifier.
 * `myip`: Displays IP addresses of the current host used for internet connections.
 * `pic2vid`: Wandelt Fotos in ein Video um (Zeitraffer mit ffmpeg)
+* `packtebooksrename`: Renames free learning eBooks from Pack Publishing
 * `propersuspend`: Computer sauber in den Standby setzen
 * `qrscan`: QR-Code scanner
 * `screenshot`: Wrapper für `scrot` um Screenshots zu erstellen
