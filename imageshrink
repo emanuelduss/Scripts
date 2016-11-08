@@ -1,29 +1,68 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# imageshrink - Shrink all images in the current directory
+# imageshrink - Shrink the specified image(s)
 #
 # TODO:
-# - Images as Parameters
 # - Resolution as Parameters
-#
 
-COUNT=0
-TOTAL=`echo *.[Jj][Pp][Gg] | wc -w`
+set -o errexit
+set -o nounset
+set -o pipefail
 
-# Optionen
-FOLDER="small"
-SIZE="800x600"
-SIZE="x1024"
-SIZE="2048x2048"
-SIZE="1024x1024"
-SIZE="1280x1280"
-QUALITY="75"
+print_help(){
+cat << EOI
+Usage: imageshrink [files ...]
 
-mkdir "$FOLDER"
+EOI
+}
 
-for datei in *.[Jj][Pp][Gg]
-do
-  COUNT="`expr $COUNT + 1`"
-  echo "$datei: Foto $COUNT von $TOTAL (`expr 100 \* $COUNT / $TOTAL`%)"
-  convert -resize "$SIZE" -quality "$QUALITY" "$datei" "small/$datei" 
-done
+check_dependencies(){
+  FAIL=0
+  for tool in $@
+  do
+    if ! hash "$tool" &> /dev/null
+    then
+      echo "The tool $tool does not exist."
+      FAIL=1
+    fi
+  done
+  if [[ "$FAIL" == 1 ]]
+  then
+    exit 1
+  fi
+}
+
+main(){
+  check_dependencies convert
+
+  FOLDER="small"
+  QUALITY="75"
+  SIZE="1280x1280"
+  SIZE="2048x2048"
+
+  if [[ ! -d "$FOLDER" ]]
+  then
+    mkdir "$FOLDER"
+  fi
+
+  TOTAL="$(echo $@ | wc -w)"
+  COUNT=0
+  for photo in $@
+  do
+    COUNT=$((COUNT + 1))
+    echo -ne "\r\033[KProcessing $photo: $COUNT/$TOTAL ($(( 100 * $COUNT / $TOTAL))%)"
+    destination="$FOLDER/$photo"
+    if [[ ! -f "$destination" && -f "$photo" && ! -d "$photo" ]]
+    then
+      if ! convert -resize "$SIZE" -quality "$QUALITY" "$photo" "$destination"
+      then
+        echo "Error while processing $photo."
+      fi
+    fi
+  done
+  echo
+}
+
+trap "echo; exit 1" SIGINT SIGTERM
+
+main "$@"
