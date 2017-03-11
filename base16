@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+print_usage(){
+cat << EOI
+Usage: base16 [OPTION]... [FILE]
+Base16 (Hex) encode or decode FILE, or standard input, to standard output.
+With no FILE, or when FILE is -, read standard input.
+
+Options:
+  -d         decode data
+  -i         when decoding, ignore non-alphabet characters
+  -w COLS    wrap encoded lines after COLS character (default 76).
+             Use 0 to disable line wrapping
+
+  -h         display this help and exit
+
+The data are encoded as described for the base16 alphabet in RFC 4648.
+When decoding, the input may contain newlines in addition to the bytes of
+the formal base64 alphabet.  Use -i to attempt to recover from any other
+non-alphabet bytes in the encoded stream.
+EOI
+}
+
+check_dependencies(){
+  local FAIL=0
+  local MISSING=""
+  for tool in $@
+  do
+    if ! hash "$tool" &> /dev/null
+    then
+      MISSING="$MISSING, $tool"
+      FAIL=1
+    fi
+  done
+  if [[ "$FAIL" == 1 ]]
+  then
+    echo "Missing dependency: ${MISSING/, }."
+    exit 1
+  fi
+}
+
+parse_arguments(){
+  WRAP_COLS="76"
+  while getopts diw:h name
+  do
+    case $name
+    in
+      d)
+        DECODE="1"
+      ;;
+      i)
+        IGNORE_GARBAGE="1"
+      ;;
+      w)
+        WRAP="1"
+        WRAP_COLS="$OPTARG"
+      ;;
+      h)
+        print_usage
+        exit
+      ;;
+      ?)
+        print_usage >&2
+        exit 1
+      ;;
+    esac
+  done
+}
+
+hex_to_binary(){
+  perl -e '
+    local $/;
+    $i = <>;
+    $i =~ s/[\r\n]//g;
+    if ($i =~ /[^0-9a-fA-F]/){
+      print "base16: invalid input\n";
+      exit 1;
+    }
+    print pack "H*", $i;'
+}
+
+hex_to_binary_ignore_garbage(){
+  perl -e '
+    local $/;
+    $i = <>;
+    $i =~ s/[^0-9a-fA-F\n\r]//g;
+    print pack "H*", $i'
+}
+
+binary_to_hex(){
+  # hexdump -ve '1/1 "%.2x"'
+  perl -e '
+    local $/;
+    print unpack "H*", <>'
+}
+
+main(){
+  check_dependencies perl
+
+  parse_arguments "$@"
+  shift $(($OPTIND - 1))
+
+  # Only one file is allowed
+  if [[ "$#" > 1 ]]
+  then
+    echo -e "base16: extra operand '$1'"
+    echo "Try 'base16 -h for more information."
+    exit 1
+  fi
+
+  # Use STDIN (-) if $1 is not set
+  FILE="${1:--}"
+
+  # Decode
+  if [[ -n "${DECODE:-}" ]]
+  then
+    if [[ -n "${IGNORE_GARBAGE:-}" ]]
+    then
+      cat "$FILE" | hex_to_binary_ignore_garbage
+    else
+      cat "$FILE" | hex_to_binary
+    fi
+  # Encode
+  else
+    if [[ "$WRAP_COLS" == "0" ]]
+    then
+      cat "$FILE" | binary_to_hex | tr -d '\n'
+    else
+      cat "$FILE" | binary_to_hex | fold -w "$WRAP_COLS"
+      echo # Print newline at the end
+    fi
+  fi
+
+}
+
+main "$@"

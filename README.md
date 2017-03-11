@@ -4,6 +4,7 @@ Scripts
 My personal scripts.
 
 * `screenctl`: A xrandr wrapper for screen settings
+* `base16`: Base16 (Hex) encode and decode data.
 * `baseconv`: Convert numbers from one base to another
 * `clang++`: Wrapper for C++11 Support in `clang++`
 * `ddns-updater`: Update Dynamic DNS Entries
