@@ -31,4 +31,4 @@ My personal scripts.
 * `wecker`: A very useful alarm clock / sleep timer
 * `wordpress-lazyest-thumbs`: Created 120x120 Thumbnails for the WordPress Lazyest Gallery
 
-The source code is licensed under GNU General Public License.
+The source code is licensed under the MIT license.
