@@ -31,7 +31,7 @@ do
   case "$(cut -d _ -f3 <<< "$pubkey")"
   in
     rsa)
-      echo "$HOST IN SSHFP 1 1 $(cut -f2 -d ' ' "$pubkey" | base64 --decode | sha1sum  | cut -f 1 -d ' ' | tr '[:lower:]' '[:upper:]'"
+      echo "$HOST IN SSHFP 1 1 $(cut -f2 -d ' ' "$pubkey" | base64 --decode | sha1sum  | cut -f 1 -d ' ' | tr '[:lower:]' '[:upper:]')"
       echo "$HOST IN SSHFP 1 2 $(cut -f2 -d ' ' "$pubkey" | base64 --decode | sha256sum  | cut -f 1 -d ' ' | tr '[:lower:]' '[:upper:]' | sed -e "s/\([0-9A-Z]\{56\}\)/\1 /")"
     ;;
     dsa)
