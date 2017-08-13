@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#set -euo pipefail
+shopt -s failglob
+IFS=$'\n\t'
+unalias -a
+#
+# sshfpget - Creates SSHFP Records for all available keys on remote host
+#
+
+HOST="${1-$(hostname -f)}"
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]
+then
+  echo "Usage: sshfpget <hostname>"
+fi
+
+r=$(ssh-keyscan $HOST 2>/dev/null)
+
+for line in $r
+do
+	line=$(echo $line | cut -d ' ' -f 2,3)
+	ssh-keygen -r $HOST -f /dev/stdin <<< $line
+done
+
