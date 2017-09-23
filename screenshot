@@ -15,6 +15,11 @@ case $1 in
   full)
     scrot -e "$APP \$f" "$FOLDER/%Y-%m-%d_%H-%M-%S.png"
   ;;
+  copy)
+    OUTFILE="$(mktemp --tmpdir="/tmp" screenshot_XXXXX).png"
+    scrot -s "$OUTFILE"
+    xclip -target image/png -selection clipboard "$OUTFILE"
+  ;;
   *)
     scrot -s -e "$APP \$f" "$FOLDER/%Y-%m-%d_%H-%M-%S.png"
   ;;
