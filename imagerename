@@ -9,5 +9,5 @@ if [ "$#" -eq "0" ]
 then
   jhead -nf$DATEFORMAT *.[jJ][pP][gG]
 else
-  jhead -nf$DATEFORMAT $@
+  jhead -nf$DATEFORMAT "$@"
 fi
