@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+DATETIME="$(date +%Y-%m-%d_%H-%M-%S)"
+
+_font_red="$(tput setaf 1)"
+_font_green="$(tput setaf 2)"
+_font_yellow="$(tput setaf 3)"
+_font_blue="$(tput setaf 4)"
+_font_orange="$(tput setaf 6)"
+_font_bold="$(tput bold)"
+_font_reset="$(tput sgr0)"
+
+print_usage(){
+cat << EOI
+Usage: template file [files ...]
+EOI
+}
+
+check_dependencies(){
+  local FAIL=0
+  for tool in "$@"
+  do
+    if ! hash "$tool" &> /dev/null
+    then
+      echo "The tool $tool does not exist."
+      FAIL=1
+    fi
+  done
+  if [[ "$FAIL" == 1 ]]
+  then
+    exit 1
+  fi
+}
+
+echo_debug(){ echo "$_font_blue[+] $@$_font_reset" >&2; }
+echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
+echo_warning(){ echo "$_font_yellow[!] $@$_font_reset" >&2; }
+echo_error(){ echo "$_font_red[#] $@$_font_reset" >&2; }
+
+parse_arguments(){
+  while getopts ab: name
+  do
+    case $name
+    in
+      a)
+        opt_a="1"
+        echo option a is set
+      ;;
+      b)
+        opt_b="1"
+        opt_b_value="$OPTARG"
+        echo option b is set with value $opt_b_value
+      ;;
+      ?)
+        print_usage >&2
+        exit 1
+      ;;
+      h)
+        print_usage
+        exit
+      ;;
+    esac
+  done
+}
+
+cleanup(){
+  echo_info "Cleaning up..."
+}
+trap cleanup EXIT
+
+do_stuff(){
+  foo="${1:-foo}"
+  echo "[OK] Foo is: $foo"
+  echo "Haloo $DATETIME"
+
+  echo_debug "This is a debug message. ($DATETIME)"
+  echo_info "This is an info message."
+  echo_warning "This is a warning message."
+  echo_error "This is an error message."
+}
+
+main(){
+  check_dependencies jhead exiftool
+
+  parse_arguments "$@"
+  shift $((OPTIND - 1))
+
+  echo "Remaining arguments: $@"
+
+  if [[ -z "${1:-}" ]]
+  then
+    echo "\$1 is not set"
+  fi
+
+  do_stuff 1 2 3
+}
+
+main "$@"
