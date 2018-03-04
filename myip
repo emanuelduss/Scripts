@@ -15,6 +15,7 @@ Options:
   -4    Show only IPv4 addresses (public ip address by default).
   -h    Show usage help.
   -l    Show local insted of public addresses.
+  -g    Show geolocation (using geoiplookup).
 
 No options produces a more verbose output.
 EOI
@@ -26,6 +27,14 @@ print_public_ipv4_address(){
 
 print_public_ipv6_address(){
   echo "$(curl -s -6 -L $IPURL || echo "")"
+}
+
+print_public_ipv4_geolocation(){
+  geoiplookup "$PUBLIC_IPV4_ADDRESS" | awk -F": " '{printf($2)}'
+}
+
+print_public_ipv6_geolocation(){
+  geoiplookup6 "$PUBLIC_IPV6_ADDRESS" | awk -F": " '{printf($2)}'
 }
 
 print_local_ipv4_address(){
@@ -45,6 +54,9 @@ main(){
     ;;
     6)
       flag_6=1
+    ;;
+    g)
+      flag_g=1
     ;;
     h)
       print_usage
@@ -78,7 +90,7 @@ main(){
     print_public_ipv6_address
   fi
 
-  if [[ -z $flag_l && -z $flag_4 && -z $flag_6 ]]
+  if [[ -z $flag_l && -z $flag_4 && -z $flag_6 && -z $flag_g ]]
   then
     PUBLIC_IPV4_ADDRESS=$(print_public_ipv4_address)
     PUBLIC_IPV6_ADDRESS=$(print_public_ipv6_address)
@@ -109,6 +121,18 @@ main(){
       else
         echo "IPv6: No NAT"
       fi
+    fi
+
+    if [[ -n "$PUBLIC_IPV4_ADDRESS" ]]
+    then
+      PUBLIC_IPV4_GEOLOCATION="$(print_public_ipv4_geolocation)"
+      echo "Geolocation IPv4: $PUBLIC_IPV4_GEOLOCATION"
+    fi
+
+    if [[ -n "$PUBLIC_IPV6_ADDRESS" ]]
+    then
+      PUBLIC_IPV6_GEOLOCATION="$(print_public_ipv6_geolocation)"
+      echo "Geolocation IPv6: $PUBLIC_IPV4_GEOLOCATION"
     fi
 
   fi
