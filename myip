@@ -141,6 +141,7 @@ main(){
 
     if [[ -n "$flag_g" ]]
     then
+      check_dependencies geoiplookup geoiplookup6
       if [[ -n "$PUBLIC_IPV4_ADDRESS"  ]]
       then
         PUBLIC_IPV4_GEOLOCATION="$(print_public_ipv4_geolocation)"
