@@ -139,16 +139,19 @@ main(){
       fi
     fi
 
-    if [[ -n "$PUBLIC_IPV4_ADDRESS" && -n "$flag_g" ]]
+    if [[ -n "$flag_g" ]]
     then
-      PUBLIC_IPV4_GEOLOCATION="$(print_public_ipv4_geolocation)"
-      echo "Geolocation IPv4: $PUBLIC_IPV4_GEOLOCATION"
-    fi
+      if [[ -n "$PUBLIC_IPV4_ADDRESS"  ]]
+      then
+        PUBLIC_IPV4_GEOLOCATION="$(print_public_ipv4_geolocation)"
+        echo "Geolocation IPv4: $PUBLIC_IPV4_GEOLOCATION"
+      fi
 
-    if [[ -n "$PUBLIC_IPV6_ADDRESS" ]]
-    then
-      PUBLIC_IPV6_GEOLOCATION="$(print_public_ipv6_geolocation)"
-      echo "Geolocation IPv6: $PUBLIC_IPV4_GEOLOCATION"
+      if [[ -n "$PUBLIC_IPV6_ADDRESS" ]]
+      then
+        PUBLIC_IPV6_GEOLOCATION="$(print_public_ipv6_geolocation)"
+        echo "Geolocation IPv6: $PUBLIC_IPV4_GEOLOCATION"
+      fi
     fi
 
   fi
