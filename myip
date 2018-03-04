@@ -21,6 +21,22 @@ No options produces a more verbose output.
 EOI
 }
 
+check_dependencies(){
+  local FAIL=0
+  for tool in "$@"
+  do
+    if ! hash "$tool" &> /dev/null
+    then
+      echo "The tool $tool does not exist."
+      FAIL=1
+    fi
+  done
+  if [[ "$FAIL" == 1 ]]
+  then
+    exit 1
+  fi
+}
+
 print_public_ipv4_address(){
   echo "$(curl -s -4 -L $IPURL || echo "")"
 }
