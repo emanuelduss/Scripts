@@ -62,7 +62,7 @@ print_local_ipv6_address(){
 }
 
 main(){
-  while getopts 46hlv name
+  while getopts 46ghlv name
   do
     case "$name" in
     4)
@@ -106,7 +106,7 @@ main(){
     print_public_ipv6_address
   fi
 
-  if [[ -z $flag_l && -z $flag_4 && -z $flag_6 && -z $flag_g ]]
+  if [[ -z $flag_l && -z $flag_4 && -z $flag_6 ]]
   then
     PUBLIC_IPV4_ADDRESS=$(print_public_ipv4_address)
     PUBLIC_IPV6_ADDRESS=$(print_public_ipv6_address)
@@ -139,7 +139,7 @@ main(){
       fi
     fi
 
-    if [[ -n "$PUBLIC_IPV4_ADDRESS" ]]
+    if [[ -n "$PUBLIC_IPV4_ADDRESS" && -n "$flag_g" ]]
     then
       PUBLIC_IPV4_GEOLOCATION="$(print_public_ipv4_geolocation)"
       echo "Geolocation IPv4: $PUBLIC_IPV4_GEOLOCATION"
