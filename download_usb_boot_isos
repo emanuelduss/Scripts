@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+_font_green="$(tput setaf 2)"
+_font_reset="$(tput sgr0)"
+
+echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
+
+download_archlinux(){
+  baseurl="https://mirror.puzzle.ch/archlinux/iso/latest/"
+  filename="$(curl "$baseurl" | grep -E -o '<a href="archlinux-[^-]+-x86_64.iso">' | cut -d\" -f2)"
+  curl -LO "$baseurl/$filename"
+}
+
+download_kalilinux(){
+  baseurl="https://cdimage.kali.org/current/"
+  filename="$(curl "$baseurl" | grep -E -o '<a href="kali-linux-[^-]+-i386.iso">' | cut -d\" -f2)"
+  curl -LO "$baseurl/$filename"
+}
+
+download_ubuntulinux(){
+  baseurl="http://releases.ubuntu.com/"
+  latestversion="$(curl "$baseurl" | grep -E 'alt="\[DIR\]"' | cut -d\" -f 6 | grep -E "[0-9]+/" | sort -Vr | head -1 | cut -d/ -f1)"
+  filename="ubuntu-$latestversion-desktop-amd64.iso"
+  curl -LO "$baseurl/$latestversion/$filename"
+}
+
+download_grml(){
+  url="$(curl https://grml.org/download/ | grep -E -o '<a href=".*grml96-full_[0-9.]+\.iso">' | cut -d\" -f2
+  )"
+  curl -LO "$url"
+}
+
+download_systemrescuecd(){
+  downloadurl="$(curl "http://www.system-rescue-cd.org/Download/" | grep -E -o '<a href=".*sysresccd.*.iso/download">' | cut -d\" -f2)"
+  filename="$(cut -d/ -f 9 <<< "$url")"
+  curl -LO "$downloadurl" -o "$filename"
+}
+
+download_debiangnomelive(){
+  baseurl="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/"
+  filename="$(curl "$baseurl" | grep -E -o '<a href="debian-live-[0-9\.]+-amd64-gnome.iso">' | cut -d\" -f2)"
+  curl -LO "$baseurl/$filename"
+}
+
+download_debiannonfreemulti(){
+  baseurl="https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/"
+  latestversion="$(curl "$baseurl" | grep -E 'alt="\[DIR\]"' | cut -d\" -f 6  | grep -E "^[0-9\.]+-live" | sort -Vr | cut -d/ -f1)"
+  filename="$(curl "$baseurl/$latestversion/amd64/iso-hybrid/" | grep '<a href="debian-live-[^"]*amd64-gnome.nonfree\.iso">' | cut -d\" -f6)"
+  echo curl -LO "$baseurl/$latestversion/amd64/iso-hybrid/$filename"
+}
+
+main(){
+  echo_info "Downloading Arch Linux..."
+  download_archlinux
+
+  echo_info "Downloading Kali Linux..."
+  download_kalilinux
+
+  echo_info "Downloading Ubuntu Linux..."
+  download_ubuntulinux
+
+  echo_info "Downloading GRML..."
+  download_grml
+
+  echo_info "Downloading SystemRescue CD..."
+  download_systemrescuecd
+
+  echo_info "Downloading Debian Live Gnome..."
+  download_debiangnomelive
+
+  echo_info "Downloading Debian Non Free Multi..."
+  download_debiannonfreemulti
+}
+
+main
