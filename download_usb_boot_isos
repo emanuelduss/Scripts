@@ -13,7 +13,7 @@ download_archlinux(){
 
 download_kalilinux(){
   baseurl="https://cdimage.kali.org/current/"
-  filename="$(curl "$baseurl" | grep -E -o '<a href="kali-linux-[^-]+-i386.iso">' | cut -d\" -f2)"
+  filename="$(curl "$baseurl" | grep -E -o '<a href="kali-linux-[^-]+-amd64.iso">' | cut -d\" -f2)"
   curl -LO "$baseurl/$filename"
 }
 
@@ -31,14 +31,13 @@ download_grml(){
 }
 
 download_systemrescuecd(){
-  downloadurl="$(curl "http://www.system-rescue-cd.org/Download/" | grep -E -o '<a href=".*sysresccd.*.iso/download">' | cut -d\" -f2)"
-  filename="$(cut -d/ -f 9 <<< "$url")"
-  curl -LO "$downloadurl" -o "$filename"
+  url="$(curl "http://www.system-rescue-cd.org/Download/" | grep -E -o '<a href=".*systemrescuecd.*.iso">' | cut -d\" -f2)"
+  curl -LO "$url"
 }
 
 download_debiangnomelive(){
   baseurl="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/"
-  filename="$(curl "$baseurl" | grep -E -o '<a href="debian-live-[0-9\.]+-amd64-gnome.iso">' | cut -d\" -f2)"
+  filename="$(curl "$baseurl" | grep -E -o '<a href="debian-live-[0-9\.]+-amd64-gnome.iso">' | cut -d\" -f2 | head -n 1)"
   curl -LO "$baseurl/$filename"
 }
 
@@ -46,7 +45,7 @@ download_debiannonfreemulti(){
   baseurl="https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/"
   latestversion="$(curl "$baseurl" | grep -E 'alt="\[DIR\]"' | cut -d\" -f 6  | grep -E "^[0-9\.]+-live" | sort -Vr | cut -d/ -f1)"
   filename="$(curl "$baseurl/$latestversion/amd64/iso-hybrid/" | grep '<a href="debian-live-[^"]*amd64-gnome.nonfree\.iso">' | cut -d\" -f6)"
-  echo curl -LO "$baseurl/$latestversion/amd64/iso-hybrid/$filename"
+  curl -LO "$baseurl/$latestversion/amd64/iso-hybrid/$filename"
 }
 
 main(){
