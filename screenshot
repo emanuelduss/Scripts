@@ -1,26 +1,60 @@
 #!/bin/bash
-#
-# screenshot - Create and save screenshot
-#
 
-FOLDER="$HOME/Daten/Bilder/Screenshots"
+set -o errexit
+set -o pipefail
+
 APP="feh -g 600x600+50%+50% --borderless --scale-down --image-bg checks"
 
-if [ ! -d "$FOLDER" ]
-then
-  FOLDER="$HOME"
-fi
+print_usage(){
+cat << EOI
+Usage: screenshot [OPTION] [FILE]
 
-case $1 in
-  full)
-    scrot -e "$APP \$f" "$FOLDER/%Y-%m-%d_%H-%M-%S.png"
-  ;;
-  copy)
-    OUTFILE="$(mktemp --tmpdir="/tmp" screenshot_XXXXX).png"
-    scrot -s "$OUTFILE"
-    xclip -target image/png -selection clipboard "$OUTFILE"
-  ;;
-  *)
-    scrot -s -e "$APP \$f" "$FOLDER/%Y-%m-%d_%H-%M-%S.png"
-  ;;
-esac
+By default, the selection is saved to your home directory.
+
+Options:
+  -f    fullscreen screenshot
+  -c    copy selection to clipboard
+  -h    display this help and exit
+
+File:
+  filename or directory where to save the screenshot.
+
+EOI
+}
+
+check_dependencies(){
+  local FAIL=0
+  for tool in "$@"
+  do
+    if ! hash "$tool" &> /dev/null
+    then
+      echo "The tool $tool does not exist."
+      FAIL=1
+    fi
+  done
+  if [[ "$FAIL" == 1 ]]
+  then
+    exit 1
+  fi
+}
+
+main(){
+  check_dependencies scrot
+
+  case $1 in
+    "full")
+      scrot -e "$APP \$f" "$HOME/%Y-%m-%d_%H-%M-%S.png"
+    ;;
+    "copy")
+      check_dependencies xclip
+      OUTFILE="$(mktemp --tmpdir="/tmp" screenshot_XXXXX).png"
+      scrot -s "$OUTFILE"
+      xclip -target image/png -selection clipboard "$OUTFILE"
+    ;;
+    *)
+      scrot -s -e "$APP \$f" "$HOME/%Y-%m-%d_%H-%M-%S.png"
+    ;;
+  esac
+}
+
+main "$@"
