@@ -5,12 +5,12 @@ KEYSIZE="2048"
 CAFILEPREFIX="ca"
 CASUBJECT="/CN=Emanuel Duss Certificate Authority/OU=emanuelduss.ch/O=Emanuel Duss/C=CH"
 CASERIAL="0x23054213370666"
-CAVALIDITY="1095" # in days = 3 years
+CAVALIDITY="730" # in days
 CAPASSWORD="password"
 
 CERTFILEPREFIX="certificate"
 CERTSUBJECT="/CN=emanuelduss.ch"
-CERTVALIDITY="1095" # in days = 3 years
+CERTVALIDITY="730" # in days
 CERTPASSWORD="password"
 
 _font_green="$(tput setaf 2)"
@@ -23,6 +23,8 @@ main(){
   echo_info "Setting umask to $UMASK..."
   umask "$UMASK"
   umask
+
+  echo "$CAPASSWORD" > "$CAFILEPREFIX-password.txt"
 
   echo_info "Creating self-signed certificate for CA..."
   openssl req -x509 -subj "$CASUBJECT" -nodes -days "$CAVALIDITY" \
@@ -38,12 +40,20 @@ main(){
   ls -l "$CAFILEPREFIX-cert.txt"
 
   echo_info "Converting CA key from PKCS8 PEM to DER..."
-  openssl pkcs8 -topk8 -in "$CAFILEPREFIX-key-pkcs8.pem" -out "$CAFILEPREFIX-key-pkcs8.der" -nocrypt
+  openssl pkcs8 -topk8 -in "$CAFILEPREFIX-key-pkcs8.pem" -out "$CAFILEPREFIX-key-pkcs8.der" -nocrypt -outform DER
   ls -l "$CAFILEPREFIX-key-pkcs8.der"
+
+  echo_info "Converting CA key from PKCS8 PEM to PEM password protected..."
+  openssl pkcs8 -topk8 -in "$CAFILEPREFIX-key-pkcs8.pem" -out "$CAFILEPREFIX-key-pkcs8-password.pem" -passout "pass:$CAPASSWORD"
+  ls -l "$CAFILEPREFIX-key-pkcs8-password.pem"
 
   echo_info "Converting CA key from PKCS8 PEM to traditional RSA PEM..."
   openssl rsa -in "$CAFILEPREFIX-key-pkcs8.pem" -out "$CAFILEPREFIX-key-traditional.pem"
   ls -l "$CAFILEPREFIX-key-traditional.pem"
+
+  echo_info "Converting CA key from PKCS8 PEM to traditional RSA PEM password protected..."
+  openssl rsa -in "$CAFILEPREFIX-key-pkcs8.pem" -out "$CAFILEPREFIX-key-traditional-password.pem" -aes128 -passout "pass:$CAPASSWORD"
+  ls -l "$CAFILEPREFIX-key-traditional-password.pem"
 
   echo_info "Converting CA key from PKCS8 PEM to traditional RSA DER..."
   openssl rsa -in "$CAFILEPREFIX-key-pkcs8.pem" -outform der -out "$CAFILEPREFIX-key-traditional.der"
@@ -58,6 +68,8 @@ main(){
   openssl pkcs12 -export -out "$CAFILEPREFIX-pkcs12-password.p12" -inkey "$CAFILEPREFIX-key-pkcs8.pem" \
     -in "$CAFILEPREFIX-cert.pem" -nodes -password "pass:$CAPASSWORD"
   ls -l "$CAFILEPREFIX-pkcs12-password.p12"
+
+  echo "$CERTPASSWORD" > "$CERTFILEPREFIX-password.txt"
 
   echo_info "Creating certificate CSR..."
   openssl req -new -subj "$CERTSUBJECT" -newkey "rsa:$KEYSIZE" -nodes \
@@ -81,12 +93,20 @@ main(){
   ls -l "$CERTFILEPREFIX-cert.txt"
 
   echo_info "Converting certificate key from PKCS8 PEM to DER..."
-  openssl pkcs8 -topk8 -in "$CERTFILEPREFIX-key-pkcs8.pem" -out "$CERTFILEPREFIX-key-pkcs8.der" -nocrypt
+  openssl pkcs8 -topk8 -in "$CERTFILEPREFIX-key-pkcs8.pem" -out "$CERTFILEPREFIX-key-pkcs8.der" -nocrypt -outform DER
   ls -l "$CERTFILEPREFIX-key-pkcs8.der"
+
+  echo_info "Converting certificate key from PKCS8 PEM to PEM password protected..."
+  openssl pkcs8 -topk8 -in "$CERTFILEPREFIX-key-pkcs8.pem" -out "$CERTFILEPREFIX-key-pkcs8-password.pem" -passout "pass:$CERTPASSWORD"
+  ls -l "$CERTFILEPREFIX-key-pkcs8.pem"
 
   echo_info "Converting certificate key from PKCS8 PEM to traditional RSA PEM..."
   openssl rsa -in "$CERTFILEPREFIX-key-pkcs8.pem" -out "$CERTFILEPREFIX-key-traditional.pem"
   ls -l "$CERTFILEPREFIX-key-traditional.pem"
+
+  echo_info "Converting certificate key from PKCS8 PEM to traditional RSA PEM password protected..."
+  openssl rsa -in "$CERTFILEPREFIX-key-pkcs8.pem" -out "$CERTFILEPREFIX-key-traditional-password.pem" -aes128 -passout "pass:$CERTPASSWORD"
+  ls -l "$CERTFILEPREFIX-key-traditional-password.pem"
 
   echo_info "Converting certificate key from PKCS8 PEM to traditional RSA DER..."
   openssl rsa -in "$CERTFILEPREFIX-key-pkcs8.pem" -outform der -out "$CERTFILEPREFIX-key-traditional.der"
