@@ -24,7 +24,7 @@ fi
 IMAGE="$(mktemp --tmpdir="/tmp" scanqr_XXXXX.png)"
 trap 'rm "$IMAGE"' EXIT
 
-if ! scrot -s "$IMAGE" 2>/dev/null
+if ! scrot -o -s "$IMAGE" 2>/dev/null
 then
   echo "Could not take image."
   exit 1
