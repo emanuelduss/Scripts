@@ -55,13 +55,13 @@ parse_arguments(){
         opt_b_value="$OPTARG"
         echo option b is set with value $opt_b_value
       ;;
-      ?)
-        print_usage >&2
-        exit 1
-      ;;
       h)
         print_usage
         exit
+      ;;
+      ?)
+        print_usage >&2
+        exit 1
       ;;
     esac
   done
