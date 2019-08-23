@@ -1,37 +1,82 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-PrintUsage(){
+set -o errexit
+set -o nounset
+set -o pipefail
+
+print_usage(){
   cat << EOI
 Usage: qrscan
 
 Select range or click into a window to scan the qrcode(s).
-Uses scrot and zbar.
+
+Depends on scrot and zbar.
 EOI
 }
 
-if (($# >= 1))
-then
-  PrintUsage
-  exit
-fi
+check_dependencies(){
+  local FAIL=0
+  for tool in "$@"
+  do
+    if ! hash "$tool" &> /dev/null
+    then
+      echo "The tool $tool does not exist."
+      FAIL=1
+    fi
+  done
+  if [[ "$FAIL" == 1 ]]
+  then
+    exit 1
+  fi
+}
 
-if ! hash scrot 2>/dev/null && hash zbarimg 2>/dev/null
-then
-  echo "Could not find scrot and zbar."
-  exit 1
-fi
+parse_arguments(){
+  while getopts h name
+  do
+    case $name
+    in
+      h)
+        print_usage
+        exit
+      ;;
+      ?)
+        print_usage >&2
+        exit 1
+      ;;
+    esac
+  done
+}
 
-IMAGE="$(mktemp --tmpdir="/tmp" scanqr_XXXXX.png)"
-trap 'rm "$IMAGE"' EXIT
+cleanup(){
+  if [[ -v "IMAGE" ]]
+  then
+    rm "$IMAGE"
+  fi
+}
+trap cleanup EXIT
 
-if ! scrot -o -s "$IMAGE" 2>/dev/null
-then
-  echo "Could not take image."
-  exit 1
-fi
+scan_qrcode(){
+  IMAGE="$(mktemp --tmpdir="/tmp" scanqr_XXXXX.png)"
+  if ! scrot -o -s "$IMAGE" 2>/dev/null
+  then
+    echo "Could not take image."
+    exit 1
+  fi
 
-if ! zbarimg -q --raw "$IMAGE"
-then
-  echo "Could not read code."
-  exit 1
-fi
+  if ! zbarimg -q --raw "$IMAGE"
+  then
+    echo "Could not read code."
+    exit 1
+  fi
+}
+
+main(){
+  check_dependencies scrot zbarimg
+
+  parse_arguments "$@"
+  shift $((OPTIND - 1))
+
+  scan_qrcode
+}
+
+main "$@"
