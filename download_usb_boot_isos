@@ -1,73 +1,81 @@
 #!/usr/bin/env bash
 
+_font_red="$(tput setaf 1)"
 _font_green="$(tput setaf 2)"
+_font_yellow="$(tput setaf 3)"
+_font_blue="$(tput setaf 4)"
+_font_orange="$(tput setaf 6)"
+_font_bold="$(tput bold)"
 _font_reset="$(tput sgr0)"
 
+echo_debug(){ echo "$_font_blue[+] $@$_font_reset" >&2; }
 echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
+echo_warning(){ echo "$_font_yellow[!] $@$_font_reset" >&2; }
+echo_error(){ echo "$_font_red[#] $@$_font_reset" >&2; }
+
+download_file(){
+  local description="$1"
+  local url="$2"
+  local filename="$(basename "$url")"
+  echo_info "Downloading $description from $url ..."
+  if [[ -f "$filename" ]]
+  then
+    echo_warning "File $filename already exists!"
+  else
+    curl -LO -C - "$url"
+  fi
+  du -h "$filename"
+}
 
 download_archlinux(){
   baseurl="https://mirror.puzzle.ch/archlinux/iso/latest/"
-  filename="$(curl "$baseurl" | grep -E -o '<a href="archlinux-[^-]+-x86_64.iso">' | cut -d\" -f2)"
-  curl -LO "$baseurl/$filename"
+  filename="$(curl -s "$baseurl" | grep -E -o '<a href="archlinux-[^-]+-x86_64.iso">' | cut -d\" -f2)"
+  download_file "Arch Linux" "$baseurl/$filename"
 }
 
 download_kalilinux(){
   baseurl="https://cdimage.kali.org/current/"
-  filename="$(curl "$baseurl" | grep -E -o '<a href="kali-linux-[^-]+-amd64.iso">' | cut -d\" -f2)"
-  curl -LO "$baseurl/$filename"
+  filename="$(curl -s "$baseurl" | grep -E -o '<a href="kali-linux-[^-]+-amd64.iso">' | cut -d\" -f2)"
+  download_file "Kali Linux" "$baseurl/$filename"
 }
 
 download_ubuntulinux(){
   baseurl="http://releases.ubuntu.com/"
-  latestversion="$(curl "$baseurl" | grep -E 'alt="\[DIR\]"' | cut -d\" -f 6 | grep -E "[0-9]+/" | sort -Vr | head -1 | cut -d/ -f1)"
+  latestversion="$(curl -s "$baseurl" | grep "p-link" | grep -v "LTS" | grep -o -E "Ubuntu [^ ]*" | cut -d ' ' -f 2)"
   filename="ubuntu-$latestversion-desktop-amd64.iso"
-  curl -LO "$baseurl/$latestversion/$filename"
+  download_file "Ubuntu Linux" "$baseurl/$latestversion/$filename"
 }
 
 download_grml(){
-  url="$(curl https://grml.org/download/ | grep -E -o '<a href=".*grml96-full_[0-9.]+\.iso">' | cut -d\" -f2
+  url="$(curl -s https://grml.org/download/ | grep -E -o '<a href=".*grml96-full_[0-9.]+\.iso">' | cut -d\" -f2
   )"
-  curl -LO "$url"
+  download_file "GRML" "$url"
 }
 
 download_systemrescuecd(){
-  url="$(curl "http://www.system-rescue-cd.org/Download/" | grep -E -o '<a href=".*systemrescuecd.*.iso">' | cut -d\" -f2)"
-  curl -LO "$url"
+  url="$(curl -s "http://www.system-rescue-cd.org/Download/" | grep -E -o '<a href=".*systemrescuecd.*.iso">' | cut -d\" -f2)"
+  download_file  "System Rescue CD" "$url"
 }
 
 download_debiangnomelive(){
   baseurl="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/"
-  filename="$(curl "$baseurl" | grep -E -o '<a href="debian-live-[0-9\.]+-amd64-gnome.iso">' | cut -d\" -f2 | head -n 1)"
-  curl -LO "$baseurl/$filename"
+  filename="$(curl -s "$baseurl" | grep -E -o '<a href="debian-live-[0-9\.]+-amd64-gnome.iso">' | cut -d\" -f2 | head -n 1)"
+  download_file "Debian Live Gnome" "$baseurl/$filename"
 }
 
 download_debiannonfreemulti(){
-  baseurl="https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/"
-  latestversion="$(curl "$baseurl" | grep -E 'alt="\[DIR\]"' | cut -d\" -f 6  | grep -E "^[0-9\.]+-live" | sort -Vr | cut -d/ -f1)"
-  filename="$(curl "$baseurl/$latestversion/amd64/iso-hybrid/" | grep '<a href="debian-live-[^"]*amd64-gnome.nonfree\.iso">' | cut -d\" -f6)"
-  curl -LO "$baseurl/$latestversion/amd64/iso-hybrid/$filename"
+  baseurl="https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/"
+  filename="$(curl -s "$baseurl" | grep -E -o '<a href="firmware-[0-9\.]+-amd64-netinst.iso">' | cut -d\" -f2 | head -n 1)"
+  download_file "Debian Non Free Multi" "$baseurl/$filename"
 }
 
 main(){
-  echo_info "Downloading Arch Linux..."
   download_archlinux
-
-  echo_info "Downloading Kali Linux..."
   download_kalilinux
-
-  echo_info "Downloading Ubuntu Linux..."
   download_ubuntulinux
-
-  echo_info "Downloading GRML..."
   download_grml
-
-  echo_info "Downloading SystemRescue CD..."
   download_systemrescuecd
-
-  echo_info "Downloading Debian Live Gnome..."
   download_debiangnomelive
-
-  echo_info "Downloading Debian Non Free Multi..."
   download_debiannonfreemulti
 }
 
