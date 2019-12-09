@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # ddns-updater - Update dynamic dns entries
 #
 
 CONF="${1:-/etc/ddns-updater.conf}"
-. $CONF
+. "$CONF"
 
 if [[ -z "$KEYFILE" || -z "$NAMESERVER" || -z "$ZONE" \
    || -z "$HOSTNAME" || -z "$TTL" ]]
@@ -28,4 +28,4 @@ fi
   echo "update add $HOSTNAME $TTL A $IPADDR"
   echo "update add $HOSTNAME $TTL AAAA $IP6ADDR"
   echo "send"
-) | nsupdate -v -k $KEYFILE
+) | nsupdate -v -k "$KEYFILE"
