@@ -13,10 +13,12 @@ then
   exit 1
 fi
 
-IPADDR="${CUSTOMIP:-$(dig myip.opendns.com @resolver1.opendns.com +short)}"
+IPADDR="${CUSTOMIP:-$(curl -s -4 https://motd.ch/ip.php)}"
 IPADDROLD="$(dig $HOSTNAME @$NAMESERVER +short)"
+IP6ADDR="${CUSTOMIP6:-$(curl -s -6 https://motd.ch/ip.php)}"
+IP6ADDROLD="$(dig $HOSTNAME AAAA @$NAMESERVER +short)"
 
-if [[ "$IPADDR" == "$IPADDROLD" ]]
+if [[ "$IPADDR" == "$IPADDROLD" && "$IP6ADDR" == "$IP6ADDROLD" ]]
 then
   exit
 fi
