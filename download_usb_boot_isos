@@ -45,7 +45,7 @@ download_kalilinux(){
 
 download_ubuntulinux(){
   local baseurl="http://releases.ubuntu.com/"
-  local latestversion="$(curl -s "$baseurl" | grep "p-link" | grep -v "LTS" | grep -o -E "Ubuntu [^ ]*" | cut -d ' ' -f 2)"
+  local latestversion="$(curl -s "$baseurl" | grep "p-link" | grep -v "LTS" | grep -o -E "Ubuntu [^ ]*" | cut -d ' ' -f 3)"
   local filename="ubuntu-$latestversion-desktop-amd64.iso"
   download_file "Ubuntu Linux" "$baseurl/$latestversion/$filename"
 }
