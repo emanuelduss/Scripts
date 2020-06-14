@@ -39,15 +39,22 @@ download_archlinux(){
 
 download_kalilinux(){
   local baseurl="https://cdimage.kali.org/current/"
-  local filename="$(curl -s "$baseurl" | grep -E -o '<a href="kali-linux-[^-]+-amd64.iso">' | cut -d\" -f2)"
+  local filename="$(curl -s "$baseurl" | grep -E -o '<a href="kali-linux-[^-]+-live-amd64.iso">' | cut -d\" -f2)"
   download_file "Kali Linux" "$baseurl/$filename"
 }
 
+download_ubuntulivelinux(){
+  local baseurl="http://cdimage.ubuntu.com/daily-live/current/"
+  local filename="$(curl -s "$baseurl" | grep -E -o '<a href="[^\"]+desktop-amd64.iso">.*desktop-amd64.iso' | cut -d\" -f2)"
+  download_file "Ubuntu Linux" "$baseurl/$filename"
+}
+
 download_ubuntulinux(){
-  local baseurl="http://releases.ubuntu.com/"
-  local latestversion="$(curl -s "$baseurl" | grep "p-link" | grep -v "LTS" | grep -o -E "Ubuntu [^ ]*" | cut -d ' ' -f 3)"
-  local filename="ubuntu-$latestversion-desktop-amd64.iso"
-  download_file "Ubuntu Linux" "$baseurl/$latestversion/$filename"
+  local baseurl="http://ubuntu.com/"
+  local downloadpage="https://ubuntu.com/download/desktop"
+  local latestversion="$(curl -s "$downloadpage" | grep -Eo "/download/desktop/[^\"]+")"
+  local imageurl="$(curl "$baseurl/$latestversion")"
+  download_file "Ubuntu Linux" "$baseurl/$latestversion"
 }
 
 download_grml(){
@@ -66,20 +73,26 @@ download_debiangnomelive(){
   download_file "Debian Live Gnome" "$baseurl/$filename"
 }
 
+download_debianxfcelive(){
+  local baseurl="https://cdimage.debian.org/images/unofficial/non-free/images-including-firmware/current-live/amd64/iso-hybrid/"
+  local filename="$(curl -s "$baseurl" | grep -E -o '<a href="debian-live-[0-9\.]+-amd64-xfce\+nonfree.iso">' | cut -d\" -f2 | head -n 1)"
+  download_file "Debian Live XFCE Non-Free" "$baseurl/$filename"
+}
+
 download_debiannonfreemulti(){
-  local baseurl="https://cdimage.debian.org/cdimage/unofficial/non-free/cd-including-firmware/current/amd64/iso-cd/"
-  local filename="$(curl -s "$baseurl" | grep -E -o '<a href="firmware-[0-9\.]+-amd64-netinst.iso">' | cut -d\" -f2 | head -n 1)"
-  download_file "Debian Non Free Multi" "$baseurl/$filename"
+  local baseurl="https://cdimage.debian.org/images/unofficial/non-free/images-including-firmware/current/multi-arch/iso-cd/"
+  local filename="$(curl -s "$baseurl" | grep -E -o '<a href="firmware-[0-9\.]+-amd64-i386-netinst.iso">' | cut -d\" -f2 | head -n 1)"
+  download_file "Debian Multi Non-Free" "$baseurl/$filename"
 }
 
 main(){
   download_archlinux
   download_kalilinux
+  download_ubuntulivelinux
   download_ubuntulinux
   download_grml
   download_systemrescuecd
   download_debiangnomelive
+  download_debianxfcelive
   download_debiannonfreemulti
 }
-
-main
