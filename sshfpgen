@@ -46,6 +46,10 @@ do
       echo "$HOST IN SSHFP 4 1 $(cut -f2 -d ' ' "$pubkey" | base64 --decode | sha1sum  | cut -f 1 -d ' ')"
       echo "$HOST IN SSHFP 4 2 $(cut -f2 -d ' ' "$pubkey" | base64 --decode | sha256sum  | cut -f 1 -d ' ')"
     ;;
+    ed448)
+      echo "$HOST IN SSHFP 6 1 $(cut -f2 -d ' ' "$pubkey" | base64 --decode | sha1sum  | cut -f 1 -d ' ')"
+      echo "$HOST IN SSHFP 6 2 $(cut -f2 -d ' ' "$pubkey" | base64 --decode | sha256sum  | cut -f 1 -d ' ')"
+    ;;
   esac
 done
 
