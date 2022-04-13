@@ -39,20 +39,22 @@ check_dependencies(){
 }
 
 main(){
-  check_dependencies scrot
+  check_dependencies maim
 
   case $1 in
     "full")
-      scrot -e "$APP \$f" "$HOME/%Y-%m-%d_%H-%M-%S.png"
+      FILENAME="$HOME/$(date +%Y-%m-%d_%H-%M-%S).png"
+      maim "$FILENAME"
+      $APP "$FILENAME"
     ;;
     "copy")
       check_dependencies xclip
-      OUTFILE="$(mktemp --tmpdir="/tmp" screenshot_XXXXX).png"
-      scrot -s "$OUTFILE"
-      xclip -target image/png -selection clipboard "$OUTFILE"
+      maim -s | xclip -selection clipboard -t image/png
     ;;
     *)
-      scrot -s -e "$APP \$f" "$HOME/%Y-%m-%d_%H-%M-%S.png"
+      FILENAME="$HOME/$(date +%Y-%m-%d_%H-%M-%S).png"
+      maim -s "$FILENAME"
+      $APP "$FILENAME"
     ;;
   esac
 }
