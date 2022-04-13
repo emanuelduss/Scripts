@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# plays the latest issue of some srf media productions.
+#
+
+print_help(){
+cat << EOI
+Usage:
+  srf 10vor10 | 100sekunden | arena | dok | kassensturz | netznatur
+  srf podcast url
+EOI
+}
+
+first_rss_url(){
+  curl -s "$1" | xmllint -xpath "string((rss/channel/item/enclosure/@url)[1])" -
+}
+play_latest_rss(){
+  mpv "$(first_rss_url $1)"
+}
+
+main(){
+  case $1 in
+    10vor10|10v*)
+      play_latest_rss http://www.srf.ch/feed/podcast/hd/c38cc259-b5cd-4ac1-b901-e3fddd901a3d.xml
+    ;;
+    100sekunden|100*)
+      play_latest_rss http://podcasts.srf.ch/100_sekunden_wissen_mpx.xml
+    ;;
+    arena|are*)
+      play_latest_rss http://www.srf.ch/feed/podcast/hd/09784065-687b-4b60-bd23-9ed0d2d43cdc.xml
+    ;;
+    dok)
+      play_latest_rss http://www.srf.ch/feed/podcast/hd/3b016ffc-afa2-466d-a694-c48b7ffe1783.xml
+    ;;
+    kassensturz|kas*)
+      play_latest_rss http://www.srf.ch/feed/podcast/hd/78a6014e-8058-4bdd-88aa-824f846ca6f0.xml
+    ;;
+    netznatur|net*)
+      play_latest_rss http://www.srf.ch/feed/podcast/hd/7225ec3b-e259-4af1-b9b0-31b293c70763.xml
+    ;;
+    http*)
+      play_latest_rss "$1"
+    ;;
+    help)
+      print_help
+    ;;
+    *)
+      print_help
+      exit 1
+    ;;
+  esac
+}
+
+main "$@"
