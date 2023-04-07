@@ -94,7 +94,7 @@ case $1 in
     ;;
 esac
 
-xrandr --dpi 80
+#xrandr --dpi 80
 
 if [ -f ~/.fehbg ]
 then
