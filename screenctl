@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# screenctl - Control settings for external monitors
+# screenctl
+#
+# Manage external screens
 #
 
 print_usage(){
@@ -20,92 +22,98 @@ Options:
 EOI
 }
 
-INTERNAL="`xrandr | awk '/ (connected|[0-9]+x[0-9]+\+[0-9]+\+[0-9]+)/{n = 1; if(++i == n){screen = $1; exit}} END{print screen}'`"
-EXTERNAL="`xrandr | awk '/ (connected|[0-9]+x[0-9]+\+[0-9]+\+[0-9]+)/{n = 2; if(++i == n){screen = $1; exit}} END{print screen}'`"
-WAIT="2" # Seconds
+main(){
+  INTERNAL="$(xrandr | awk '/ (connected|[0-9]+x[0-9]+\+[0-9]+\+[0-9]+)/{n = 1; if(++i == n){screen = $1; exit}} END{print screen}')"
+  EXTERNAL="$(xrandr | awk '/ (connected|[0-9]+x[0-9]+\+[0-9]+\+[0-9]+)/{n = 2; if(++i == n){screen = $1; exit}} END{print screen}')"
+  WAIT="2" # Seconds
 
-case $1 in
-  "modes")
-    xrandr -q
-    ;;
-  "internal")
-    if [[ -n "$INTERNAL" ]]
-    then
-      xrandr --output "$INTERNAL" --auto --output "$EXTERNAL" --off
-    fi
-    ;;
-  "external")
-    if [[ -n "$EXTERNAL" ]]
-    then
-      xrandr --output "$INTERNAL" --off --output "$EXTERNAL" --auto
-    fi
-    ;;
-  "clone")
-    if [[ -n "$INTERNAL" && -n "$EXTERNAL" ]]
-    then
-      CLONERES="`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort -n | uniq -d | tail -1`"
-      xrandr --output "$INTERNAL" --mode "$CLONERES" \
-            --output "$EXTERNAL" --same-as "$INTERNAL" --mode "$CLONERES"
-    fi
-    ;;
-  "extend")
-    if [[ -n "$INTERNAL" && -n "$EXTERNAL" ]]
-    then
-      case $2 in
-        "left")
-          xrandr --output "$INTERNAL" --auto \
-                --output "$EXTERNAL" --auto --left-of "$INTERNAL" --primary
-        ;;
-        "right")
-          xrandr --output "$INTERNAL" --auto \
-                --output "$EXTERNAL" --auto --right-of "$INTERNAL" --primary
-        ;;
-        "")
-          xrandr --output "$INTERNAL" --auto --pos 0x400 \
-                --output "$EXTERNAL" --auto --pos 1280x0 --primary
-        ;;
-        *)
-          print_usage
-          exit 1
-        ;;
-      esac
+  case $1 in
+    "modes")
+      xrandr -q
+      ;;
+    "internal")
+      if [[ -n "$INTERNAL" ]]
+      then
+        xrandr --output "$INTERNAL" --auto --output "$EXTERNAL" --off
+        xrandr --output "$INTERNAL" --auto
       fi
-    ;;
-  "dialog")
-    MODE=$(zenity  --list  --text "Select screen mode:" \
-      --radiolist  --column "Mode" --column "Description" \
-      TRUE "Internal" \
-      FALSE "External" \
-      FALSE "Clone" \
-      FALSE "Extend" \
-      FALSE "Extend Left" \
-      FALSE "Extend Right")
-    if [ -n "$MODE" ]
-    then
-      $0 ${MODE,,}
-    fi
-    ;;
-  "-h")
-    print_usage
-    ;;
-  *)
-    print_usage
-    exit 1
-    ;;
-esac
+      ;;
+    "external")
+      if [[ -n "$EXTERNAL" ]]
+      then
+        xrandr --output "$INTERNAL" --off --output "$EXTERNAL" --auto
+        xrandr --output "$EXTERNAL" --auto
+      fi
+      ;;
+    "clone")
+      if [[ -n "$INTERNAL" && -n "$EXTERNAL" ]]
+      then
+        CLONERES="`xrandr --query | awk '/^ *[0-9]*x[0-9]*/{ print $1 }' | sort -n | uniq -d | tail -1`"
+        xrandr --output "$INTERNAL" --mode "$CLONERES" \
+              --output "$EXTERNAL" --same-as "$INTERNAL" --mode "$CLONERES"
+      fi
+      ;;
+    "extend")
+      if [[ -n "$INTERNAL" && -n "$EXTERNAL" ]]
+      then
+        case $2 in
+          "left")
+            xrandr --output "$INTERNAL" --auto \
+                  --output "$EXTERNAL" --auto --left-of "$INTERNAL" --primary
+          ;;
+          "right")
+            xrandr --output "$INTERNAL" --auto \
+                  --output "$EXTERNAL" --auto --right-of "$INTERNAL" --primary
+          ;;
+          "")
+            xrandr --output "$INTERNAL" --auto --pos 0x400 \
+                  --output "$EXTERNAL" --auto --pos 1280x0 --primary
+          ;;
+          *)
+            print_usage
+            exit 1
+          ;;
+        esac
+        fi
+      ;;
+    "dialog")
+      MODE=$(zenity  --list  --text "Select screen mode:" \
+        --radiolist  --column "Mode" --column "Description" \
+        TRUE "Internal" \
+        FALSE "External" \
+        FALSE "Clone" \
+        FALSE "Extend" \
+        FALSE "Extend Left" \
+        FALSE "Extend Right")
+      if [[ -n "$MODE" ]]
+      then
+        $0 ${MODE,,}
+      fi
+      ;;
+    "-h")
+      print_usage
+      ;;
+    *)
+      print_usage
+      exit 1
+      ;;
+  esac
 
-#xrandr --dpi 80
+  #xrandr --dpi 80
 
-if [ -f ~/.fehbg ]
-then
-  (sleep "$WAIT"
-    ~/.fehbg
-  ) &
-fi
+  if [[ -f ~/.fehbg ]]
+  then
+    (sleep "$WAIT"
+      ~/.fehbg
+    ) &
+  fi
 
-if pgrep conky &>/dev/null
-then
-  (sleep "$WAIT"
-    pkill -HUP conky 2>&1 >/dev/null
-  ) &
-fi
+  if pgrep conky &>/dev/null
+  then
+    (sleep "$WAIT"
+      pkill -HUP conky 2>&1 >/dev/null
+    ) &
+  fi
+}
+
+main "$@"
