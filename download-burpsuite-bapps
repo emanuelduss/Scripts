@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+mkdir bapps
+curl -s https://portswigger.net/bappstore | awk -F '["<>/]' '/bapp-label heading-4/{ print $7,$9 }' | while read id name
+do
+  echo "Downloading $name..."
+  curl -s -L "https://portswigger-cdn.net/bappstore/bapps/download/$id" -o "bapps/${name//[^a-z0-9A-Z]/_}.bapp"
+done
