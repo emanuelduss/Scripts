@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+#
+# wifimitm
+#
+# Create WiFi access point to mitm connections.
+#
+# Author: Emanuel Duss
+#
+
+set -o nounset
+
+_font_red="$(tput setaf 1)"
+_font_green="$(tput setaf 2)"
+_font_yellow="$(tput setaf 3)"
+_font_blue="$(tput setaf 4)"
+_font_orange="$(tput setaf 6)"
+_font_bold="$(tput bold)"
+_font_reset="$(tput sgr0)"
+
+check_dependencies(){
+  local FAIL=0
+  for tool in "$@"
+  do
+    if ! hash "$tool" &> /dev/null
+    then
+      echo "The tool $tool does not exist."
+      FAIL=1
+    fi
+  done
+  if [[ "$FAIL" == 1 ]]
+  then
+    exit 1
+  fi
+}
+
+echo_debug(){ echo "$_font_blue[+] $@$_font_reset" >&2; }
+echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
+echo_warning(){ echo "$_font_yellow[!] $@$_font_reset" >&2; }
+echo_error(){ echo "$_font_red[#] $@$_font_reset" >&2; }
+
+cleanup(){
+  echo
+  echo_info "Stopping wifimitm..."
+
+  echo_debug "Stopping dhclient..."
+  pkill dhclient
+
+  echo_debug "Stopping dnsmasq..."
+  pkill dnsmasq
+
+  echo_debug "Stopping hostapd..."
+  pkill hostapd
+
+  echo_debug "Restoring network interface configuration..."
+  ip address flush "${AP_INTERFACE}"
+  base64 -d <<< "${INITIAL_AP_INTERFACE}" | ip address restore "${AP_INTERFACE}"
+  sysctl -q net.ipv4.ip_forward=${INITIAL_IPFORWARD}
+
+  echo_debug "Restoring iptables configuration..."
+  iptables-restore <(echo "${INITIAL_IPTABLES}")
+
+  echo_info "Stopped."
+}
+trap cleanup EXIT
+
+configure_settings(){
+  #
+  # Configure wifimitm here
+  #
+  LAN_INTERFACE="eth0"
+  AP_INTERFACE="wlan0"
+  AP_ADDRESS="192.168.42.1"
+  SSID="evil"
+  PASSWORD="Evil.123"
+  REDIRECTPORTS=(80 443)
+  REDIRECTTO="8080"
+
+  INITIAL_AP_INTERFACE="$(ip address save ${AP_INTERFACE} | base64 -w0)"
+  INITIAL_IPFORWARD="$(sysctl -n net.ipv4.ip_forward)"
+  INITIAL_IPTABLES="$(iptables-save)"
+}
+
+show_settings(){
+  echo_info "Configured LAN interface: ${LAN_INTERFACE}"
+  echo_info "Configured access point interface: ${AP_INTERFACE}"
+  echo_info "Configured access point IP address: ${AP_ADDRESS}"
+  echo_info "Configured SSID: ${SSID}"
+  echo_info "Configured password: ${PASSWORD}"
+  echo_info "Configured port(s) to redirect: ${REDIRECTPORTS[@]}"
+  echo_info "Configured port to redirect to: ${REDIRECTTO}"
+  echo
+}
+
+configure_network(){
+  echo_info "Configure access point interface..."
+  ip address flush "${AP_INTERFACE}"
+  ip address add "$AP_ADDRESS/24" dev "${AP_INTERFACE}"
+  ip link set dev "${AP_INTERFACE}" up
+  ip -br address list "${AP_INTERFACE}"
+
+  echo_info "Configure port redirects..."
+  for port in ${REDIRECTPORTS[@]}
+  do
+    iptables -t nat -A PREROUTING -i "${AP_INTERFACE}" -p tcp --dport "$port" -j REDIRECT --to-port "${REDIRECTTO}"
+  done
+  iptables -nL -t nat | grep REDIRECT
+}
+
+configure_ap(){
+  echo_info "Starting hostapd..."
+  hostapd <(cat << EOI
+interface=${AP_INTERFACE}
+driver=nl80211
+ssid=${SSID}
+hw_mode=g
+channel=6
+wpa_passphrase=${PASSWORD}
+wpa=1
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP CCMP
+wpa_ptk_rekey=600
+macaddr_acl=0
+EOI
+) &
+}
+
+configure_dnsmasq(){
+  echo_info "Starting dnsmasq..."
+  local subnet="$(cut -d. -f 1-3 <<< ${AP_ADDRESS})"
+
+  dnsmasq --no-daemon --interface "${AP_INTERFACE}" --bind-interfaces \
+    --dhcp-range="${subnet}.50,${subnet}.150" \
+    --log-dhcp --log-queries \
+    -C /dev/null &
+}
+
+configure_nat(){
+  echo_info "Configuring IP forwarding and NAT..."
+  sysctl -w net.ipv4.ip_forward=1
+  iptables -t nat -A POSTROUTING -o ${LAN_INTERFACE} -j MASQUERADE
+  iptables -P FORWARD ACCEPT
+}
+
+main(){
+  echo_info "Started wifimitm at $(date "+%Y-%m-%d %H:%M:%S")"
+
+  check_dependencies dhclient hostapd dnsmasq
+
+  configure_settings
+  show_settings
+
+  configure_network
+  configure_ap
+  configure_dnsmasq
+  configure_nat
+
+  echo_info "Successfully set up wifimitm."
+
+  read -r -d '' _ </dev/tty # Wait for ^C
+}
+
+main "$@"
