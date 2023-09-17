@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# pdfmergetoc
+#
+# Merges multiple PDFs and adds a table of contents
+#
+# Author: Emanuel Duss
+#
+
+PrintUsage(){
+cat << EOI
+Usage:
+  pdfmergetoc [-t title] [-s subtitle] [-a author] [-d date] files ...
+EOI
+}
+
+WORKDIR="`mktemp -d`"
+TITLE=$1
+AUTHOR=$2
+DATE=".."
+
+DOCUMENTFILE="document.tex"
+INCLUDEFILE="include.tex"
+
+cat > $WORKDIR/$DOCUMENTFILE << EOI
+\documentclass{scrartcl}
+\usepackage{ngerman}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{amsmath}
+\usepackage{pdfpages}
+
+\title{$TITLE}
+\author{$AUTHOR}
+% \date{$DATE}
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+\input{include.tex}
+\end{document}
+EOI
+
+> $INCLUDEFILE
+for i in $@
+do
+  TITEL="$(sed -e 's/^includefiles\///g;s/_/\ /g;s/\.pdf//g' <<< \"$i\")"
+  echo "\includepdf[scale=0.9pages=1,pagecommand=\section{$TITEL}]{${i}}" >> $INCLUDEFILE
+  if ((`pdfinfo $i  | awk '/^Pages:/{print $2}'` >= 2))
+  then
+    echo "\includepdf[pages=2-]{${i}}" >> $INCLUDEFILE
+  fi
+done
+
+latexmk -pdf $DOCUMENTFILE
+latexmk -c
