@@ -152,8 +152,8 @@ main(){
   configure_nat
 
   echo_info "Successfully set up wifimitm."
-
-  read -r -d '' _ </dev/tty # Wait for ^C
+  echo_info "Press ^C (Ctrl-C) to stop wifimitm."
+  read -d '' # Wait for ^C
 }
 
 main "$@"
