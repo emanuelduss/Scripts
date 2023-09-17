@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# MP3-Sammlung Sortieren
+#
+# History
+# 2010-06-28 [Emanuel Duss] Erste Version
+#
+
+# Lese Angaben ein
+echo -n "Artist: "
+read ARTIST
+echo -n "Album: "
+YEAR=`pwd | sed -r -e 's/.*\/([0-9]{4})[^\/]*/\1/g'`
+read ALBUM
+echo -n "Jahr: "
+read YEAR
+echo -n "Genre: "
+read GENRE
+echo -n "Kommentar: "
+read COMMENT
+echo
+
+echo "Artist:    $ARTIST"
+echo "Album:     $ALBUM"
+echo "Jahr:      $YEAR"
+echo "Genre:     $GENRE"
+echo "Kommentar: $COMMENT"
+
+echo "MP3 Dateien taggen? [ENTER]"
+ls *.mp3
+mp3info -a "$ARTIST" -g "$GENRE" -l "$ALBUM" -y "$YEAR" -c "$COMMENT" *.mp3
+echo "ID3-Tags sind gesetzt"
+read
+mp3info *.mp3
+
+mkdir -p "$ARTIST/$YEAR - $ALBUM"
+
+for file in *.mp3
+do
+  echo $file
+  mv "$file" "$(mp3info -p "%a/%y - %l/%n - %t.mp3" "$file")"
+done
+
