@@ -42,9 +42,6 @@ cleanup(){
   echo
   echo_info "Stopping wifimitm..."
 
-  echo_debug "Stopping dhclient..."
-  pkill dhclient
-
   echo_debug "Stopping dnsmasq..."
   pkill dnsmasq
 
@@ -144,7 +141,7 @@ configure_nat(){
 main(){
   echo_info "Started wifimitm at $(date "+%Y-%m-%d %H:%M:%S")"
 
-  check_dependencies dhclient hostapd dnsmasq
+  check_dependencies hostapd dnsmasq
 
   configure_settings
   show_settings
