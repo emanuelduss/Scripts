@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# makecert
+#
+# Create CA / certificates in various formats for testing purposes
+#
+# Author: Emanuel Duss
+#
 
 KEYSIZE="2048"
 

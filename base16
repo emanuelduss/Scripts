@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# base16
+#
+# Base16 encode/decode data.
+#
+# Author: Emanuel Duss
+#
 
 set -o errexit
 set -o nounset

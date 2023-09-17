@@ -1,6 +1,10 @@
 #!/bin/bash
 #
-# wecker - Use your computer as an alarm clock
+# wecker
+#
+# Use your computer as an alarm clock
+#
+# Author: Emanuel Duss
 #
 
 NOW=`date +%s`

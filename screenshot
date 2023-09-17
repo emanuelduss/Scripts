@@ -1,4 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# screenshot
+#
+# Simple screenshot wrapper around maim
+#
+# Author: Emanuel Duss
+#
 
 set -o errexit
 set -o pipefail

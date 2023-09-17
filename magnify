@@ -1,4 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# magnify
+#
+# Show current screen in imageviewer to zoom in for presentations
+#
+# Author: Emanuel Duss
+#
 
 PrintUsage(){
   cat << EOI

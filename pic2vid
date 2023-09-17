@@ -1,6 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# pic2vid - Konvertiert mehrere Fotos zu einem Video (Zeitraffer)
+# pic2vid
+#
+# Convert multiple pictures to a video (time lapse)
+#
+# Author: Emanuel Duss
 #
 
 DIR="$1"

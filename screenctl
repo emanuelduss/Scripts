@@ -4,6 +4,8 @@
 #
 # Manage external screens
 #
+# Author: Emanuel Duss
+#
 
 print_usage(){
 cat << EOI

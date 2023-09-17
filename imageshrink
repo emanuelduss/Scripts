@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 #
-# imageshrink - Shrink the specified image(s)
+# imageshrink
 #
-# TODO:
-# - Resolution as Parameters
+# Shrink the specified image(s)
+#
+# Author: Emanuel Duss
+#
 
 set -o errexit
 set -o nounset

@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# download-burpsuite-bapps
+#
+# Download all Burp Suite BApps from the BAppstore.
+#
+# Author: Emanuel Duss
+#
 
 mkdir bapps
 curl -s https://portswigger.net/bappstore | awk -F '["<>/]' '/bapp-label heading-4/{ print $7,$9 }' | while read id name

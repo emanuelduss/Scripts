@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# template
+#
+# This is a template for bash scripts
+#
+# Author: Emanuel Duss
+#
 
 set -o errexit
 set -o nounset
