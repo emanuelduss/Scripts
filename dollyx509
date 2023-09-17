@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+"""
+dollyx509
+
+Clone X.509 certificates by reading a certificate and generating new key material.
+
+Author: Emanuel Duss
+"""
+
+import argparse
+import OpenSSL.crypto
+
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+
+    parser.add_argument('-i', '--certin',metavar='inputcert', required=True,
+        dest='inputcert', help='Certificate to clone')
+    parser.add_argument('-c', '--certout',metavar='outputcert', required=True,
+        dest='outputcert', help='Output file of cloned certificate')
+    parser.add_argument('-k', '--keyout',metavar='outputkey', required=True,
+        dest='outputkey', help='Output file of generated private key')
+    parser.add_argument('--inform', choices={'pem', 'der'}, default='pem',
+        dest='inputformat', help='Input format of certificate')
+    parser.add_argument('--outform', choices={'pem', 'der'}, default='pem',
+        dest='outputformat', help='Output format of certificate/key')
+
+    return parser.parse_args()
+
+class Certificate:
+    def __init__(self, file, format='pem'):
+        self.import_certificate(file, format)
+
+    def __get_filetype(self, format):
+        if format == 'der':
+            return OpenSSL.crypto.FILETYPE_ASN1
+        else:
+            return OpenSSL.crypto.FILETYPE_PEM
+
+    def import_certificate(self, file, format='pem'):
+        with open(file, "r") as f:
+            self.cert = OpenSSL.crypto.load_certificate(self.__get_filetype(format), f.read())
+    
+    def clone(self):
+        self.key = OpenSSL.crypto.PKey()
+        self.key.generate_key(self.cert.get_pubkey().type(), self.cert.get_pubkey().bits())
+        self.cert.set_pubkey(self.key)
+        self.cert.sign(self.key,'sha256')
+    
+    def export_certificate(self, file, format='pem'):
+        with open(file, "wb") as f:
+            f.write(OpenSSL.crypto.dump_certificate(self.__get_filetype(format), self.cert))
+    
+    def export_privatekey(self, file, format='pem'):
+        with open(file, "wb") as f:
+            f.write(OpenSSL.crypto.dump_privatekey(self.__get_filetype(format), self.key))
+
+def main():
+    args = parse_args()
+
+    certificate = Certificate(args.inputcert, args.inputformat)
+    certificate.clone()
+    certificate.export_certificate(args.outputcert, args.outputformat)
+    certificate.export_privatekey(args.outputkey, args.outputformat)
+
+    return
+
+if __name__ == '__main__':
+    main()
