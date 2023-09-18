@@ -9,13 +9,10 @@
 
 set -o nounset
 
-_font_red="$(tput setaf 1)"
 _font_green="$(tput setaf 2)"
-_font_yellow="$(tput setaf 3)"
-_font_blue="$(tput setaf 4)"
-_font_orange="$(tput setaf 6)"
-_font_bold="$(tput bold)"
 _font_reset="$(tput sgr0)"
+
+echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
 
 check_dependencies(){
   local FAIL=0
@@ -33,27 +30,22 @@ check_dependencies(){
   fi
 }
 
-echo_debug(){ echo "$_font_blue[+] $@$_font_reset" >&2; }
-echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
-echo_warning(){ echo "$_font_yellow[!] $@$_font_reset" >&2; }
-echo_error(){ echo "$_font_red[#] $@$_font_reset" >&2; }
-
 cleanup(){
   echo
   echo_info "Stopping wifimitm..."
 
-  echo_debug "Stopping dnsmasq..."
+  echo_info "Stopping dnsmasq..."
   pkill dnsmasq
 
-  echo_debug "Stopping hostapd..."
+  echo_info "Stopping hostapd..."
   pkill hostapd
 
-  echo_debug "Restoring network interface configuration..."
+  echo_info "Restoring network interface configuration..."
   ip address flush "${AP_INTERFACE}"
   base64 -d <<< "${INITIAL_AP_INTERFACE}" | ip address restore "${AP_INTERFACE}"
   sysctl -q net.ipv4.ip_forward=${INITIAL_IPFORWARD}
 
-  echo_debug "Restoring iptables configuration..."
+  echo_info "Restoring iptables configuration..."
   iptables-restore <(echo "${INITIAL_IPTABLES}")
 
   echo_info "Stopped."
