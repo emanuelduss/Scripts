@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# download-boot-isos
+#
+# Download several ISOs
+#
+# Author: Emanuel Duss
+#
 
 _font_red="$(tput setaf 1)"
 _font_green="$(tput setaf 2)"
