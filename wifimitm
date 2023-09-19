@@ -61,6 +61,8 @@ configure_settings(){
   AP_ADDRESS="192.168.42.1"
   SSID="evil"
   PASSWORD="Evil.123"
+  #REDIRECT="no"
+  REDIRECT="yes"
   REDIRECTPORTS=(80 443)
   REDIRECTTO="8080"
 
@@ -75,6 +77,7 @@ show_settings(){
   echo_info "Configured access point IP address: ${AP_ADDRESS}"
   echo_info "Configured SSID: ${SSID}"
   echo_info "Configured password: ${PASSWORD}"
+  echo_info "Configured to redirect: ${REDIRECT}"
   echo_info "Configured port(s) to redirect: ${REDIRECTPORTS[@]}"
   echo_info "Configured port to redirect to: ${REDIRECTTO}"
   echo
@@ -87,12 +90,17 @@ configure_network(){
   ip link set dev "${AP_INTERFACE}" up
   ip -br address list "${AP_INTERFACE}"
 
-  echo_info "Configure port redirects..."
-  for port in ${REDIRECTPORTS[@]}
-  do
-    iptables -t nat -A PREROUTING -i "${AP_INTERFACE}" -p tcp --dport "$port" -j REDIRECT --to-port "${REDIRECTTO}"
-  done
-  iptables -nL -t nat | grep REDIRECT
+  if [[ "$REDIRECT" == "yes" ]]
+  then
+    echo_info "Configure port redirects..."
+    for port in ${REDIRECTPORTS[@]}
+    do
+      iptables -t nat -A PREROUTING -i "${AP_INTERFACE}" -p tcp --dport "$port" -j REDIRECT --to-port "${REDIRECTTO}"
+    done
+    iptables -nL -t nat | grep REDIRECT
+  else
+    echo_info "Not configured to redirect ports."
+  fi
 }
 
 configure_ap(){
