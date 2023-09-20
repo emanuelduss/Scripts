@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# wifimitm
+# 802.11evil
 #
 # Create WiFi access point to mitm connections.
 #
@@ -9,10 +9,31 @@
 
 set -o nounset
 
+_font_red="$(tput setaf 1)"
 _font_green="$(tput setaf 2)"
 _font_reset="$(tput sgr0)"
 
 echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
+echo_error(){ echo "$_font_red[#] $@$_font_reset" >&2; }
+
+print_usage(){
+cat << EOI
+Usage: 802.11evil [OPTION]...
+
+Program:
+  Create WiFi access point to mitm connections.
+
+Options:
+  -l    LAN interface           (default: eth0)
+  -a    Access Point interface  (default: wlan0)
+  -i    Access Point IP address (default: 192.168.42.1)
+  -s    Access Point SSID       (default: 802.11evil)
+  -p    Access Point password   (default: password)
+  -r    Redirect on/off         (default: off)
+  -f    Redirect ports from     (default: 80,443)
+  -t    Redirect ports to       (default: 8080)
+EOI
+}
 
 check_dependencies(){
   local FAIL=0
@@ -30,9 +51,65 @@ check_dependencies(){
   fi
 }
 
+parse_arguments(){
+  LAN_INTERFACE="eth0"
+  AP_INTERFACE="wlan0"
+  AP_ADDRESS="192.168.42.1"
+  SSID="802.11evil"
+  PASSWORD="password"
+  REDIRECT="off"
+  REDIRECTPORTS="80,443"
+  REDIRECTTO="8080"
+  ABORT=1
+
+  while getopts l:i:a:s:p:rf:t:h name
+  do
+    case $name
+    in
+      l)
+        LAN_INTERFACE="$OPTARG"
+      ;;
+      a)
+        AP_INTERFACE="$OPTARG"
+      ;;
+      i)
+        AP_ADDRESS="$OPTARG"
+      ;;
+      s)
+        SSID="$OPTARG"
+      ;;
+      p)
+        PASSWORD="$OPTARG"
+      ;;
+      r)
+        REDIRECT="on"
+      ;;
+      f)
+        REDIRECTPORTS="$OPTARG"
+      ;;
+      t)
+        REDIRECTTO="$OPTARG"
+      ;;
+      h)
+        print_usage
+        exit
+      ;;
+      ?)
+        print_usage >&2
+        exit 1
+      ;;
+    esac
+  done
+}
+
 cleanup(){
+  if [[ "$ABORT" == 1 ]]
+  then
+    exit
+  fi
+
   echo
-  echo_info "Stopping wifimitm..."
+  echo_info "Stopping 802.11evil..."
 
   echo_info "Stopping dnsmasq..."
   pkill dnsmasq
@@ -52,25 +129,6 @@ cleanup(){
 }
 trap cleanup EXIT
 
-configure_settings(){
-  #
-  # Configure wifimitm here
-  #
-  LAN_INTERFACE="eth0"
-  AP_INTERFACE="wlan0"
-  AP_ADDRESS="192.168.42.1"
-  SSID="evil"
-  PASSWORD="Evil.123"
-  #REDIRECT="no"
-  REDIRECT="yes"
-  REDIRECTPORTS=(80 443)
-  REDIRECTTO="8080"
-
-  INITIAL_AP_INTERFACE="$(ip address save ${AP_INTERFACE} | base64 -w0)"
-  INITIAL_IPFORWARD="$(sysctl -n net.ipv4.ip_forward)"
-  INITIAL_IPTABLES="$(iptables-save)"
-}
-
 show_settings(){
   echo_info "Configured LAN interface: ${LAN_INTERFACE}"
   echo_info "Configured access point interface: ${AP_INTERFACE}"
@@ -83,6 +141,22 @@ show_settings(){
   echo
 }
 
+check_root(){
+  if [[ "$UID" != 0 ]]
+  then
+    echo_error "Program must be run as root."
+    ABORT=1
+    exit 1
+  fi
+  ABORT=0
+}
+
+save_initial_configuration(){
+  INITIAL_AP_INTERFACE="$(ip address save ${AP_INTERFACE} | base64 -w0)"
+  INITIAL_IPFORWARD="$(sysctl -n net.ipv4.ip_forward)"
+  INITIAL_IPTABLES="$(iptables-save)"
+}
+
 configure_network(){
   echo_info "Configure access point interface..."
   ip address flush "${AP_INTERFACE}"
@@ -90,10 +164,10 @@ configure_network(){
   ip link set dev "${AP_INTERFACE}" up
   ip -br address list "${AP_INTERFACE}"
 
-  if [[ "$REDIRECT" == "yes" ]]
+  if [[ "$REDIRECT" == "on" ]]
   then
     echo_info "Configure port redirects..."
-    for port in ${REDIRECTPORTS[@]}
+    for port in ${REDIRECTPORTS//,/ }
     do
       iptables -t nat -A PREROUTING -i "${AP_INTERFACE}" -p tcp --dport "$port" -j REDIRECT --to-port "${REDIRECTTO}"
     done
@@ -139,20 +213,22 @@ configure_nat(){
 }
 
 main(){
-  echo_info "Started wifimitm at $(date "+%Y-%m-%d %H:%M:%S")"
-
   check_dependencies hostapd dnsmasq
 
-  configure_settings
+  parse_arguments "$@"
+  shift $((OPTIND - 1))
+
   show_settings
+  check_root
+  save_initial_configuration
 
   configure_network
   configure_ap
   configure_dnsmasq
   configure_nat
 
-  echo_info "Successfully set up wifimitm."
-  echo_info "Press ^C (Ctrl-C) to stop wifimitm."
+  echo_info "Successfully set up 802.11evil."
+  echo_info "Press ^C (Ctrl-C) to stop 802.11evil."
   read -d '' # Wait for ^C
 }
 
