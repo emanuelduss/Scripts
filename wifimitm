@@ -2,7 +2,7 @@
 #
 # 802.11evil
 #
-# Create WiFi access point to mitm connections.
+# Create evil WiFi access point.
 #
 # Author: Emanuel Duss
 #
@@ -18,10 +18,10 @@ echo_error(){ echo "$_font_red[#] $@$_font_reset" >&2; }
 
 print_usage(){
 cat << EOI
-Usage: 802.11evil [OPTION]...
+Usage: 802.11evil [OPTION ...]
 
 Program:
-  Create WiFi access point to mitm connections.
+  Create evil WiFi access point.
 
 Options:
   -l    LAN interface           (default: eth0)
