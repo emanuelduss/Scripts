@@ -9,12 +9,12 @@
 
 set -o nounset
 
-_font_red="$(tput setaf 1)"
-_font_green="$(tput setaf 2)"
-_font_reset="$(tput sgr0)"
+_red="$(tput setaf 1)"
+_green="$(tput setaf 2)"
+_reset="$(tput sgr0)"
 
-echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
-echo_error(){ echo "$_font_red[#] $@$_font_reset" >&2; }
+echo_info(){ echo "${_green}[*] ${*}${_reset}" >&2; }
+echo_error(){ echo "${_red}[#] ${*}${_reset}" >&2; }
 
 print_usage(){
 cat << EOI
@@ -36,21 +36,16 @@ EOI
 }
 
 check_dependencies(){
-  local FAIL=0
+  local fail=0
   for command in "$@"
   do
     if ! hash "$command" &> /dev/null
     then
       echo_error "Command \"$command\" not found."
-      FAIL=1
+      fail=1
     fi
   done
-
-  if [[ "$FAIL" == 1 ]]
-  then
-    ABORT=1
-    exit 1
-  fi
+  [[ "$fail" == 1 ]] && exit 1
 }
 
 parse_arguments(){
@@ -62,7 +57,6 @@ parse_arguments(){
   REDIRECT="off"
   REDIRECTPORTS="80,443"
   REDIRECTTO="8080"
-  ABORT=1
 
   while getopts l:i:a:s:p:rf:t:h name
   do
@@ -104,15 +98,19 @@ parse_arguments(){
   done
 }
 
-cleanup(){
-  if [[ "$ABORT" == 1 ]]
-  then
-    exit 1
-  fi
+# Always run exit_trap; only run exit_cleanup when set to 1
+CLEANUP="0"
+enable_cleanup(){ CLEANUP="1"; }
 
+exit_trap(){
   echo
   echo_info "Stopping 802.11evil..."
 
+  [[ "${CLEANUP}" == "1" ]] && exit_cleanup
+}
+trap exit_trap EXIT
+
+exit_cleanup(){
   echo_info "Stopping dnsmasq..."
   pkill dnsmasq
 
@@ -122,14 +120,13 @@ cleanup(){
   echo_info "Restoring network interface configuration..."
   ip address flush "${AP_INTERFACE}"
   base64 -d <<< "${INITIAL_AP_INTERFACE}" | ip address restore "${AP_INTERFACE}"
-  sysctl -q net.ipv4.ip_forward=${INITIAL_IPFORWARD}
+  sysctl -q net.ipv4.ip_forward="${INITIAL_IPFORWARD}"
 
   echo_info "Restoring iptables configuration..."
   iptables-restore <(echo "${INITIAL_IPTABLES}")
 
   echo_info "Stopped."
 }
-trap cleanup EXIT
 
 show_settings(){
   echo_info "Configured LAN interface: ${LAN_INTERFACE}"
@@ -138,23 +135,21 @@ show_settings(){
   echo_info "Configured SSID: ${SSID}"
   echo_info "Configured password: ${PASSWORD}"
   echo_info "Configured to redirect: ${REDIRECT}"
-  echo_info "Configured port(s) to redirect: ${REDIRECTPORTS[@]}"
+  echo_info "Configured port(s) to redirect: ${REDIRECTPORTS}"
   echo_info "Configured port to redirect to: ${REDIRECTTO}"
   echo
 }
 
-check_root(){
+check_preconditions(){
   if [[ "$UID" != 0 ]]
   then
     echo_error "Program must be run as root."
-    ABORT=1
     exit 1
   fi
-  ABORT=0
 }
 
 save_initial_configuration(){
-  INITIAL_AP_INTERFACE="$(ip address save ${AP_INTERFACE} | base64 -w0)"
+  INITIAL_AP_INTERFACE="$(ip address save "${AP_INTERFACE}" | base64 -w0)"
   INITIAL_IPFORWARD="$(sysctl -n net.ipv4.ip_forward)"
   INITIAL_IPTABLES="$(iptables-save)"
 }
@@ -199,7 +194,8 @@ EOI
 
 configure_dnsmasq(){
   echo_info "Starting dnsmasq..."
-  local subnet="$(cut -d . -f 1-3 <<< ${AP_ADDRESS})"
+  local subnet
+  subnet="$(cut -d . -f 1-3 <<< "${AP_ADDRESS}")"
 
   dnsmasq --no-daemon --interface "${AP_INTERFACE}" --bind-interfaces \
     --dhcp-range="${subnet}.50,${subnet}.150" \
@@ -210,7 +206,7 @@ configure_dnsmasq(){
 configure_nat(){
   echo_info "Configuring IP forwarding and NAT..."
   sysctl -q -w net.ipv4.ip_forward=1
-  iptables -t nat -A POSTROUTING -o ${LAN_INTERFACE} -j MASQUERADE
+  iptables -t nat -A POSTROUTING -o "${LAN_INTERFACE}" -j MASQUERADE
   iptables -P FORWARD ACCEPT
 }
 
@@ -221,8 +217,10 @@ main(){
   shift $((OPTIND - 1))
 
   show_settings
-  check_root
+  check_preconditions
   save_initial_configuration
+
+  enable_cleanup
 
   configure_network
   configure_ap
@@ -231,7 +229,7 @@ main(){
 
   echo_info "Successfully set up 802.11evil."
   echo_info "Press ^C (Ctrl-C) to stop 802.11evil."
-  read -d '' # Wait for ^C
+  read -r -d '' # Wait for ^C
 }
 
 main "$@"
