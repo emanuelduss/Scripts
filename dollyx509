@@ -39,17 +39,17 @@ class Certificate:
     def import_certificate(self, file, format='pem'):
         with open(file, "r") as f:
             self.cert = OpenSSL.crypto.load_certificate(self.__get_filetype(format), f.read())
-    
+
     def clone(self):
         self.key = OpenSSL.crypto.PKey()
         self.key.generate_key(self.cert.get_pubkey().type(), self.cert.get_pubkey().bits())
         self.cert.set_pubkey(self.key)
         self.cert.sign(self.key,'sha256')
-    
+
     def export_certificate(self, file, format='pem'):
         with open(file, "wb") as f:
             f.write(OpenSSL.crypto.dump_certificate(self.__get_filetype(format), self.cert))
-    
+
     def export_privatekey(self, file, format='pem'):
         with open(file, "wb") as f:
             f.write(OpenSSL.crypto.dump_privatekey(self.__get_filetype(format), self.key))
