@@ -11,56 +11,53 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-DATETIME="$(date +%Y-%m-%d_%H-%M-%S)"
-
-_font_red="$(tput setaf 1)"
-_font_green="$(tput setaf 2)"
-_font_yellow="$(tput setaf 3)"
-_font_blue="$(tput setaf 4)"
-_font_orange="$(tput setaf 6)"
-_font_bold="$(tput bold)"
-_font_reset="$(tput sgr0)"
+_red="$(tput setaf 1)"
+_green="$(tput setaf 2)"
+_yellow="$(tput setaf 3)"
+_blue="$(tput setaf 4)"
+_orange="$(tput setaf 6)"
+_bold="$(tput bold)"
+_reset="$(tput sgr0)"
 
 print_usage(){
 cat << EOI
-Usage: template file [files ...]
+Usage: template  [OPTION ...]
+
+Program:
+  This is just a template
+
+Options:
+  -a    Option alice            (default: alice)
 EOI
 }
 
 check_dependencies(){
-  local FAIL=0
-  for tool in "$@"
+  local fail=0
+  for command in "$@"
   do
-    if ! hash "$tool" &> /dev/null
+    if ! hash "$command" &> /dev/null
     then
-      echo "The tool $tool does not exist."
-      FAIL=1
+      echo_error "Command \"$command\" not found."
+      fail=1
     fi
   done
-  if [[ "$FAIL" == 1 ]]
-  then
-    exit 1
-  fi
+  [[ "$fail" == 1 ]] && exit 1
 }
 
-echo_debug(){ echo "$_font_blue[+] $@$_font_reset" >&2; }
-echo_info(){ echo "$_font_green[*] $@$_font_reset" >&2; }
-echo_warning(){ echo "$_font_yellow[!] $@$_font_reset" >&2; }
-echo_error(){ echo "$_font_red[#] $@$_font_reset" >&2; }
+echo_debug(){ echo "${_blue}[+] ${*}${_reset}" >&2; }
+echo_info(){ echo "${_green}[*] ${*}${_reset}" >&2; }
+echo_warning(){ echo "${_yellow}[!] ${*}${_reset}" >&2; }
+echo_error(){ echo "${_red}[#] ${*}${_reset}" >&2; }
 
 parse_arguments(){
+  ALICE="alice"
+
   while getopts ab: name
   do
     case $name
     in
       a)
-        opt_a="1"
-        echo option a is set
-      ;;
-      b)
-        opt_b="1"
-        opt_b_value="$OPTARG"
-        echo option b is set with value $opt_b_value
+        ${ALICE}="${OPTARG}"
       ;;
       h)
         print_usage
@@ -74,8 +71,29 @@ parse_arguments(){
   done
 }
 
+check_preconditions(){
+  if [[ "$UID" != 0 ]]
+  then
+    echo_error "Program must be run as root."
+    ABORT=1
+    exit 1
+  fi
+}
+
+# Always run exit_trap; only run exit_cleanup when set to 1
+CLEANUP="0"
+enable_cleanup(){ CLEANUP="1"; }
+
+exit_trap(){
+  echo
+  echo_info "Stopping ..."
+
+  [[ "${CLEANUP}" == "1" ]] && exit_cleanup
+}
+trap exit_trap EXIT
+
 cleanup(){
-  echo_info "Cleaning up..."
+  echo_info "Other stuff to clean up..."
 }
 trap cleanup EXIT
 
@@ -87,7 +105,8 @@ do_stuff(){
   echo_debug "This is a debug message. ($DATETIME)"
   echo_info "This is an info message."
   echo_warning "This is a warning message."
-  echo_error "This is an error message."
+  sleep 1
+  echo_error "This is an error message. ($DATETIME)"
 }
 
 main(){
@@ -95,8 +114,10 @@ main(){
 
   parse_arguments "$@"
   shift $((OPTIND - 1))
-
   echo "Remaining arguments: $@"
+
+  check_preconditions
+  enable_cleanup
 
   if [[ -z "${1:-}" ]]
   then
