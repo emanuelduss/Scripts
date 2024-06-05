@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+#
+# ip-forwarding-scanner
+#
+# Test systems if IP forwarding is enabled.
+#
+# Author: Emanuel Duss
+#
+
+set -o nounset
+
+_blue="$(tput setaf 4)"
+_green="$(tput setaf 2)"
+_red="$(tput setaf 1)"
+_reset="$(tput sgr0)"
+
+echo_debug(){ echo "${_blue}[+] ${*}${_reset}" >&2; }
+echo_info(){ echo "${_green}[*] ${*}${_reset}" >&2; }
+echo_error(){ echo "${_red}[#] ${*}${_reset}" >&2; }
+
+print_usage(){
+cat << EOI
+Usage: ip-forwarding-scanner [OPTIONS...]
+
+Program:
+  Test systems for IP forwarding.
+
+Options:
+  -i    LAN interface        (default: eth0)
+  -d    Destinations         (default: 1.1.1.1,8.8.8.8)
+  -p    TCP Ports            (default: 80,443,445)
+  -t    Target IP addresses  (default: local network if LAN interface)
+EOI
+}
+
+check_dependencies(){
+  local fail=0
+  for command in "$@"
+  do
+    if ! hash "$command" &> /dev/null
+    then
+      echo_error "Command \"$command\" not found."
+      fail=1
+    fi
+  done
+  [[ "$fail" == 1 ]] && exit 1
+}
+
+parse_arguments(){
+  INTERFACE="eth0"
+  DESTINATIONS="1.1.1.1,8.8.8.8"
+  PORTS="80,443,445"
+
+  while getopts i:d:p:t:h name
+  do
+    case $name
+    in
+      i)
+        INTERFACE="$OPTARG"
+      ;;
+      d)
+        DESTINATIONS="$OPTARG"
+      ;;
+      p)
+        PORTS="$OPTARG"
+      ;;
+      t)
+        TARGETS="$OPTARG"
+      ;;
+      h)
+        print_usage
+        exit
+      ;;
+      ?)
+        print_usage >&2
+        exit 1
+      ;;
+    esac
+  done
+}
+
+trap "echo; exit" INT
+
+check_preconditions(){
+  if [[ "$UID" != 0 ]]
+  then
+    echo_error "Program must be run as root."
+    exit 1
+  fi
+}
+
+configure_settings(){
+  if [[ -n "${TARGETS:-}" ]]
+  then
+    TARGETS="${TARGETS//,/ }"
+  else
+    TARGETS="$(ip -br addr list "$INTERFACE" 2>/dev/null | awk '{ print $3 }')"
+    if [[ -z ${TARGETS:-} ]]
+    then
+      echo_error "Could not get local network information."
+      echo_error "Does the interface exist and is it correctly configured?"
+      exit 1
+    fi
+  fi
+
+  DESTINATIONS="${DESTINATIONS//,/ }"
+  PORTS="${PORTS//,/ }"
+}
+
+show_settings(){
+  echo_debug "LAN interface:  ${INTERFACE}"
+  echo_debug "Destinations:   ${DESTINATIONS}"
+  echo_debug "TCP ports:      ${PORTS}"
+  echo_debug "Targets :       ${TARGETS}"
+  echo
+}
+
+test_ip_forwarding(){
+  echo_debug "Scanning for hosts in the local network..."
+  nmap -n -sn -PR $TARGETS | grep -E -B2 "([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}" \
+    | xargs -n3 -d '\n' | awk '{ print $5, $13 }' 2>/dev/null | while read ip mac
+  do
+    if [[ -z "${ip}" || -z "${mac}" ]]
+    then
+      echo_info "No targets found."
+      return
+    fi
+
+    echo_info "Testging $ip ($mac) for IP forwarding..."
+    for destination in $DESTINATIONS
+    do
+      echo_debug "Trying to access $destination via ICMP..."
+      nping -e "$INTERFACE" -c 1 --dest-mac "$mac" --icmp "$destination" | grep "^RCVD.*Echo reply " && echo_info "Success!"
+      for port in $PORTS
+      do
+        echo_debug "Trying to access $destination via TCP on port $port..."
+        nping -e "$INTERFACE" -c 1 --dest-mac "$mac" --tcp -p "$port" "$destination" | grep "^RCVD.*SA " && echo_info "Success!"
+      done
+      echo
+    done
+  done
+}
+
+main(){
+  check_dependencies nmap nping
+
+  parse_arguments "$@"
+  shift $((OPTIND - 1))
+
+  configure_settings
+  show_settings
+
+  check_preconditions
+  test_ip_forwarding
+}
+
+main "$@"
