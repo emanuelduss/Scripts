@@ -13,13 +13,19 @@ import logging
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('-x', '--xxx',metavar='file', required=True, dest='myvar', help='Somehelp')
+    parser.add_argument('-x', '--xxx',metavar='file', required=False, dest='myvar', help='Somehelp')
 
     return parser.parse_args()
 
 class MyClass:
+    foo = "bar"
+    bar = ["one", "two", "three"]
+
     def __init__(self):
         print("Hello")
+
+    def hello(self, input: str):
+        print(f"Hello {input}!")
 
 def main():
     args = parse_args()
@@ -29,8 +35,15 @@ def main():
     logging.warning('Warning!')  # will print a message to the console
 
     myclass = MyClass()
-
-    return
+    myclass.hello("sugus")
 
 if __name__ == '__main__':
-    main()
+    # main()
+
+    list_3 = ['Accidental', '4daa7fe9', 'eM131Me', 'Y!.90']
+    secret = []
+
+    for x in list_3:
+        secret.append(x[:2])
+
+    print(''.join(secret))

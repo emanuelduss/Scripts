@@ -62,7 +62,5 @@ def main():
     certificate.export_certificate(args.outputcert, args.outputformat)
     certificate.export_privatekey(args.outputkey, args.outputformat)
 
-    return
-
 if __name__ == '__main__':
     main()
