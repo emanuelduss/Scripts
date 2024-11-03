@@ -30,7 +30,14 @@ Options:
   -d    Destinations         (default: 1.1.1.1,8.8.8.8)
   -p    TCP Ports            (default: 80,443,445)
   -t    Target IP addresses  (default: local network if LAN interface)
+
+Author: Emanuel Duss (https://emanuelduss.ch)
 EOI
+}
+
+show_banner(){
+  echo_info ip-forwarding-scanner
+  echo
 }
 
 check_dependencies(){
@@ -116,7 +123,7 @@ show_settings(){
 }
 
 test_ip_forwarding(){
-  echo_debug "Scanning for hosts in the local network..."
+  echo_debug "Scanning targets..."
   nmap -n -sn -PR $TARGETS | grep -E -B2 "([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}" \
     | xargs -n3 -d '\n' | awk '{ print $5, $13 }' 2>/dev/null | while read ip mac
   do
@@ -126,17 +133,19 @@ test_ip_forwarding(){
       return
     fi
 
-    echo_info "Testging $ip ($mac) for IP forwarding..."
+    echo
+    echo_info "Testging $mac ($ip) for IP forwarding..."
     for destination in $DESTINATIONS
     do
       echo_debug "Trying to access $destination via ICMP..."
-      nping -e "$INTERFACE" -c 1 --dest-mac "$mac" --icmp "$destination" | grep "^RCVD.*Echo reply " && echo_info "Success!"
+      nping -e "$INTERFACE" -c 1 --dest-mac "$mac" --icmp "$destination" \
+        | grep "^RCVD.*Echo reply " && echo_info "Success!"
       for port in $PORTS
       do
         echo_debug "Trying to access $destination via TCP on port $port..."
-        nping -e "$INTERFACE" -c 1 --dest-mac "$mac" --tcp -p "$port" "$destination" | grep "^RCVD.*SA " && echo_info "Success!"
+        nping -e "$INTERFACE" -c 1 --dest-mac "$mac" --tcp -p "$port" "$destination" \
+          | grep "^RCVD.*SA " && echo_info "Success!"
       done
-      echo
     done
   done
 }
@@ -147,6 +156,7 @@ main(){
   parse_arguments "$@"
   shift $((OPTIND - 1))
 
+  show_banner
   configure_settings
   show_settings
 
