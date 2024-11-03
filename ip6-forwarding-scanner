@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+#
+# ip6-forwarding-scanner
+#
+# Test systems if IP forwarding is enabled.
+#
+# Author: Emanuel Duss
+#
+
+set -o nounset
+
+_blue="$(tput setaf 4)"
+_green="$(tput setaf 2)"
+_red="$(tput setaf 1)"
+_reset="$(tput sgr0)"
+
+echo_debug(){ echo "${_blue}[+] ${*}${_reset}" >&2; }
+echo_info(){ echo "${_green}[*] ${*}${_reset}" >&2; }
+echo_error(){ echo "${_red}[#] ${*}${_reset}" >&2; }
+
+print_usage(){
+cat << EOI
+Usage: ip6-forwarding-scanner [OPTIONS...]
+
+Program:
+  Test systems for IPv6 forwarding.
+
+Options:
+  -i    LAN interface        (default: eth0)
+  -d    Destinations         (default: 2620:fe::9,2001:4860:4860::8888)
+  -p    TCP Ports            (default: 53,443)
+  -t    Target IP addresses  (default: Hosts responding to all nodes multicast address (ff02::1))
+
+Author: Emanuel Duss (https://emanuelduss.ch)
+EOI
+}
+
+show_banner(){
+  echo_info ip6-forwarding-scanner
+  echo
+}
+
+check_dependencies(){
+  local fail=0
+  for command in "$@"
+  do
+    if ! hash "$command" &> /dev/null
+    then
+      echo_error "Command \"$command\" not found."
+      fail=1
+    fi
+  done
+  [[ "$fail" == 1 ]] && exit 1
+}
+
+parse_arguments(){
+  INTERFACE="eth0"
+  DESTINATIONS="2620:fe::9,2001:4860:4860::8888"
+  PORTS="53,443"
+
+  while getopts i:d:p:t:h name
+  do
+    case $name
+    in
+      i)
+        INTERFACE="$OPTARG"
+      ;;
+      d)
+        DESTINATIONS="$OPTARG"
+      ;;
+      p)
+        PORTS="$OPTARG"
+      ;;
+      t)
+        TARGETS="$OPTARG"
+      ;;
+      h)
+        print_usage
+        exit
+      ;;
+      ?)
+        print_usage >&2
+        exit 1
+      ;;
+    esac
+  done
+}
+
+trap "echo; exit" INT
+
+check_preconditions(){
+  if [[ "$UID" != 0 ]]
+  then
+    echo_error "Program must be run as root."
+    exit 1
+  fi
+}
+
+configure_settings(){
+  if [[ -n "${TARGETS:-}" ]]
+  then
+    TARGETS="${TARGETS//,/ }"
+  fi
+
+  DESTINATIONS="${DESTINATIONS//,/ }"
+  PORTS="${PORTS//,/ }"
+
+  SOURCEMAC="$(ip -color=never -brief link show "$INTERFACE" | awk '{ print $3 }')"
+  SOURCEIPS="$(ip -6 -color=never address list "$INTERFACE" \
+    | awk -v ORS=" " '/inet6.*global/{ sub(/\/../,"",$2); print $2}')"
+}
+
+show_settings(){
+  echo_debug "LAN interface:       ${INTERFACE}"
+  echo_debug "Source MAC Address:  ${SOURCEMAC}"
+  echo_debug "Source IP Address:   ${SOURCEIPS}"
+  echo_debug "Destinations:        ${DESTINATIONS}"
+  echo_debug "TCP ports:           ${PORTS}"
+  echo_debug "Targets:             ${TARGETS:-Hosts responding to all nodes multicast address (ff02::1)}"
+  echo
+}
+
+test_ip_forwarding(){
+  echo_debug "Scaning targets..."
+  if [[ -n "${TARGETS:-}" ]]
+  then
+    nmap -n -sn -PR -6 $TARGETS | grep -E -B2 "([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}" \
+      | xargs -n3 -d '\n' | awk '{ print $5, $13 }'
+  else
+    nmap --script targets-ipv6-multicast-echo 2>/dev/null \
+      | awk '/IP:/{ print $3, $5 }' | sort -r | sort -uk2
+  fi | while read ip mac
+  do
+    if [[ -z "${ip}" || -z "${mac}" ]]
+    then
+      echo_info "No targets found."
+      return
+    fi
+
+    echo
+    echo_info "Testging $mac ($ip) for IP forwarding..."
+    for destination in $DESTINATIONS
+    do
+      for sourceip in $SOURCEIPS
+      do
+        # Currently, nping does not support ICMPv6 :(
+        # See https://www.uni-koeln.de/~pbogusze/posts/ICMPv6_traffic_generators.html
+        # echo_debug "Trying to access $destination via ICMP from $sourceip..."
+        # nping -6 -e "$INTERFACE" -c 1 --source-mac "$SOURCEMAC" --source-ip "$sourceip" \
+        #   --dest-mac "$mac" --icmp "$destination" | grep "^RCVD.*Echo reply " && echo_info "Success!"
+        for port in $PORTS
+        do
+          echo_debug "Trying to access $destination via TCP on port $port from $sourceip..."
+          nping -6 -e "$INTERFACE" -c 1 --source-mac "$SOURCEMAC" --source-ip "$sourceip" \
+            --dest-mac "$mac" --tcp -p "$port" "$destination" | grep "^RCVD.*SA " && echo_info "Success!"
+        done
+      done
+    done
+  done
+}
+
+main(){
+  check_dependencies nmap nping
+
+  parse_arguments "$@"
+  shift $((OPTIND - 1))
+
+  show_banner
+  configure_settings
+  show_settings
+
+  check_preconditions
+  test_ip_forwarding
+}
+
+main "$@"
