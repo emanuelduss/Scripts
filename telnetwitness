@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# telnetwitness
+#
+# Receives the telnet banner of the systems provided from stdin
+#
+# Author: Emanuel Duss
+#
+
+while read host
+do
+  echo "$ telnet $host"
+  (
+    sleep 2 | telnet $host;
+  )
+  echo
+  echo
+done
