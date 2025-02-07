@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# dnssnoop
+#
+# Check if the DNS server has the hostnames from STDIN in the cache
+#
+# Author: Emanuel Duss
+#
+
+NAMESERVER="$1"
+
+while read domain
+do
+  if (( "$(dig $domain "@$NAMESERVER" +norec +noall +short | wc -l)" > 0 ))
+  then
+    echo "$domain is in the cache."
+  fi
+done
