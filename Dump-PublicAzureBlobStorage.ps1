@@ -15,6 +15,8 @@
 .EXAMPLE
     .\Dump-PublicAzureBlobStorage.ps1 https://example.blob.core.windows.net/
 
+    If you have a SAS URL, omit the path but keep the parameters like sig, sp, ...
+
 .NOTES
     Author: Emanuel Duss <me@emanuelduss.ch>
 #>
