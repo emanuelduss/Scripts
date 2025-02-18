@@ -24,14 +24,15 @@ Program:
   Create evil WiFi access point.
 
 Options:
-  -l    LAN interface           (default: eth0)
-  -a    Access Point interface  (default: wlan0)
-  -i    Access Point IP address (default: 192.168.42.1)
-  -s    Access Point SSID       (default: 802.11evil)
-  -p    Access Point password   (default: password)
-  -r    Redirect on/off         (default: off)
-  -f    Redirect ports from     (default: 80,443)
-  -t    Redirect ports to       (default: 8080)
+  -l    LAN interface                  (default: eth0)
+  -a    Access Point interface         (default: wlan0)
+  -d    Disable WiFi (routing only)    (default: off)
+  -i    Access Point IP address        (default: 192.168.42.1)
+  -s    Access Point SSID              (default: 802.11evil)
+  -p    Access Point password          (default: password)
+  -r    Redirect on/off                (default: off)
+  -f    Redirect ports from            (default: 80,443)
+  -t    Redirect ports to              (default: 8080)
 EOI
 }
 
@@ -58,7 +59,7 @@ parse_arguments(){
   REDIRECTPORTS="80,443"
   REDIRECTTO="8080"
 
-  while getopts l:i:a:s:p:rf:t:h name
+  while getopts l:i:a:ds:p:rf:t:h name
   do
     case $name
     in
@@ -67,6 +68,9 @@ parse_arguments(){
       ;;
       a)
         AP_INTERFACE="$OPTARG"
+      ;;
+      d)
+        DISABLEWIFI="on"
       ;;
       i)
         AP_ADDRESS="$OPTARG"
@@ -175,8 +179,12 @@ configure_network(){
 }
 
 configure_ap(){
-  echo_info "Starting hostapd..."
-  hostapd <(cat << EOI
+  if [[ "${DISABLEWIFI}" == "on" ]]
+  then
+    echo_info "WiFi is disabled. Only router functionality is available."
+  else
+    echo_info "Starting hostapd..."
+    hostapd <(cat << EOI
 interface=${AP_INTERFACE}
 driver=nl80211
 ssid=${SSID}
@@ -190,6 +198,7 @@ wpa_ptk_rekey=600
 macaddr_acl=0
 EOI
 ) &
+  fi
 }
 
 configure_dnsmasq(){
