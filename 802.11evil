@@ -52,6 +52,7 @@ check_dependencies(){
 parse_arguments(){
   LAN_INTERFACE="eth0"
   AP_INTERFACE="wlan0"
+  DISABLEWIFI="off"
   AP_ADDRESS="192.168.42.1"
   SSID="802.11evil"
   PASSWORD="password"
