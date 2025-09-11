@@ -97,6 +97,10 @@ cleanup(){
 }
 trap cleanup EXIT
 
+log(){
+  echo "[*] $(date +"%F %T"): $@"
+}
+
 do_stuff(){
   foo="${1:-foo}"
   echo "[OK] Foo is: $foo"
