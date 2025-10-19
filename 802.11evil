@@ -35,6 +35,9 @@ Options:
   -t    Redirect ports to              (default: 8080)
   -4    IPv4 only mode                    (default: off)
 
+  -o    DHCP Option 121 for Static Route  (default: off)
+        Example: 0.0.0.0/1,128.0.0.0/1
+
 EOI
 }
 
@@ -64,8 +67,9 @@ parse_arguments(){
   REDIRECTPORTS="80,443"
   REDIRECTTO="8080"
   IPV4ONLY="off"
+  DHCP121OPTION="off"
 
-  while getopts 4l:i:a:ds:p:rf:t:h name
+  while getopts 4l:i:a:ds:p:rf:t:o:h name
   do
     case $name
     in
@@ -98,6 +102,9 @@ parse_arguments(){
       ;;
       t)
         REDIRECTTO="$OPTARG"
+      ;;
+      o)
+        DHCP121OPTION="$OPTARG"
       ;;
       h)
         print_usage
@@ -162,6 +169,7 @@ show_settings(){
   echo_info "Configured to redirect: ${REDIRECT}"
   echo_info "Configured port(s) to redirect: ${REDIRECTPORTS}"
   echo_info "Configured port to redirect to: ${REDIRECTTO}"
+  echo_info "Configured DHCP option 121: ${DHCP121OPTION}"
   echo
 }
 
@@ -258,11 +266,17 @@ EOI
 
 configure_dnsmasq(){
   echo_info "Starting dnsmasq..."
-  local subnet
-  subnet="$(cut -d . -f 1-3 <<< "${AP_ADDRESS}")"
+  local subnet="$(cut -d . -f 1-3 <<< "${AP_ADDRESS}")"
+  local staticroute=""
+
+  if [[ "$DHCP121OPTION" != "off" ]]
+  then
+    echo_info "Configuring DHCP static routes (DHCP option 121) for ${DHCP121OPTION}..."
+    staticroute="--dhcp-option-force option:classless-static-route,${DHCP121OPTION//,/,$AP_ADDRESS,},$AP_ADDRESS"
+  fi
 
   dnsmasq --no-daemon --interface "${AP_INTERFACE}" --bind-interfaces \
-    --dhcp-range="${subnet}.50,${subnet}.150" \
+    --dhcp-range="${subnet}.50,${subnet}.150" ${staticroute} \
     --log-dhcp --log-queries \
     -C /dev/null &
 }
