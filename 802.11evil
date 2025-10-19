@@ -33,6 +33,8 @@ Options:
   -r    Redirect on/off                (default: off)
   -f    Redirect ports from            (default: 80,443)
   -t    Redirect ports to              (default: 8080)
+  -4    IPv4 only mode                    (default: off)
+
 EOI
 }
 
@@ -54,16 +56,22 @@ parse_arguments(){
   AP_INTERFACE="wlan0"
   DISABLEWIFI="off"
   AP_ADDRESS="192.168.42.1"
+  AP_ADDRESS6="fd42::1"
+  AP_ADDRESS6PREFIX="fd42::/64"
   SSID="802.11evil"
   PASSWORD="password"
   REDIRECT="off"
   REDIRECTPORTS="80,443"
   REDIRECTTO="8080"
+  IPV4ONLY="off"
 
-  while getopts l:i:a:ds:p:rf:t:h name
+  while getopts 4l:i:a:ds:p:rf:t:h name
   do
     case $name
     in
+      4)
+        IPV4ONLY="on"
+      ;;
       l)
         LAN_INTERFACE="$OPTARG"
       ;;
@@ -127,8 +135,19 @@ exit_cleanup(){
   base64 -d <<< "${INITIAL_AP_INTERFACE}" | ip address restore "${AP_INTERFACE}"
   sysctl -q net.ipv4.ip_forward="${INITIAL_IPFORWARD}"
 
+  if [[ "$IPV4ONLY" == "off" ]]
+  then
+    sysctl -q -w net.ipv6.conf.all.forwarding="${INITIAL_IP6FORWARD}"
+  fi
+
   echo_info "Restoring iptables configuration..."
   iptables-restore <(echo "${INITIAL_IPTABLES}")
+
+  if [[ "$IPV4ONLY" == "off" ]]
+  then
+    echo_info "Restoring ip6tables configuration..."
+    ip6tables-restore <(echo "${INITIAL_IP6TABLES}")
+  fi
 
   echo_info "Stopped."
 }
@@ -137,6 +156,7 @@ show_settings(){
   echo_info "Configured LAN interface: ${LAN_INTERFACE}"
   echo_info "Configured access point interface: ${AP_INTERFACE}"
   echo_info "Configured access point IP address: ${AP_ADDRESS}"
+  echo_info "IPv4 only mode: ${IPV4ONLY}"
   echo_info "Configured SSID: ${SSID}"
   echo_info "Configured password: ${PASSWORD}"
   echo_info "Configured to redirect: ${REDIRECT}"
@@ -153,16 +173,39 @@ check_preconditions(){
   fi
 }
 
+check_host_ipv6_capability(){
+  if ip -6 addr list ${LAN_INTERFACE} | grep -q global
+  then
+    echo_info "Output LAN interface has IPv6. Using IPv4 and IPv6 mode."
+  else
+    echo_info "Output LAN interface does not have IPv6. Using IPv4 only mode."
+    IPV4ONLY="on"
+  fi
+}
+
 save_initial_configuration(){
   INITIAL_AP_INTERFACE="$(ip address save "${AP_INTERFACE}" | base64 -w0)"
   INITIAL_IPFORWARD="$(sysctl -n net.ipv4.ip_forward)"
   INITIAL_IPTABLES="$(iptables-save)"
+
+  if [[ "$IPV4ONLY" == "off" ]]
+  then
+    INITIAL_IP6FORWARD="$(sysctl -n net.ipv6.conf.all.forwarding)"
+    INITIAL_IP6TABLES="$(ip6tables-save)"
+  fi
 }
 
 configure_network(){
   echo_info "Configure access point interface..."
   ip address flush "${AP_INTERFACE}"
   ip address add "${AP_ADDRESS}/24" dev "${AP_INTERFACE}"
+
+  if [[ "$IPV4ONLY" == "off" ]]
+  then
+    echo_info "Configuring IPv6 address ${AP_ADDRESS6} on interface ${AP_INTERFACE}..."
+    ip address add "${AP_ADDRESS6}/64" dev "${AP_INTERFACE}"
+  fi
+
   ip link set dev "${AP_INTERFACE}" up
   ip -br address list "${AP_INTERFACE}"
 
@@ -172,8 +215,19 @@ configure_network(){
     for port in ${REDIRECTPORTS//,/ }
     do
       iptables -t nat -A PREROUTING -i "${AP_INTERFACE}" -p tcp --dport "$port" -j REDIRECT --to-port "${REDIRECTTO}"
+
+      if [[ "$IPV4ONLY" == "off" ]]
+      then
+        echo_info "Configure port redirects for IPv6 for port $port to redirect to ${REDIRECTTO}..."
+        ip6tables -t nat -A PREROUTING -i "${AP_INTERFACE}" -p tcp --dport "$port" -j REDIRECT --to-port "${REDIRECTTO}"
+      fi
     done
     iptables -nL -t nat | grep REDIRECT
+
+    if [[ "$IPV4ONLY" == "off" ]]
+    then
+      ip6tables -nL -t nat | grep REDIRECT
+    fi
   else
     echo_info "Not configured to redirect ports."
   fi
@@ -213,11 +267,45 @@ configure_dnsmasq(){
     -C /dev/null &
 }
 
+configure_radvd(){
+  if [[ "$IPV4ONLY" == "off" ]]
+  then
+    echo_info "Starting radvd on interface ${AP_INTERFACE}..."
+    radvd -n -C <(cat << EOI
+interface ${AP_INTERFACE} {
+  AdvSendAdvert on;
+  MinRtrAdvInterval 3;
+  MaxRtrAdvInterval 10;
+  prefix ${AP_ADDRESS6PREFIX} {
+    AdvOnLink on;
+    AdvAutonomous on;
+    # AdvRouterAddr on;
+  };
+  RDNSS ${AP_ADDRESS6}
+  {
+    AdvRDNSSLifetime 30;
+  };
+};
+EOI
+)&
+  fi
+}
+
 configure_nat(){
   echo_info "Configuring IP forwarding and NAT..."
   sysctl -q -w net.ipv4.ip_forward=1
   iptables -t nat -A POSTROUTING -o "${LAN_INTERFACE}" -j MASQUERADE
   iptables -P FORWARD ACCEPT
+
+  if [[ "$IPV4ONLY" == "off" ]]
+  then
+    echo_info "Configuring IP forwarding and NAT for IPv6 on interface ${LAN_INTERFACE}..."
+    # Accept RA even if IPv6 forwarding is enabled, otherwise the default route is removed
+    sysctl -q -w net.ipv6.conf."${LAN_INTERFACE}".accept_ra=2
+    sysctl -q -w net.ipv6.conf.all.forwarding=1
+    ip6tables -t nat -A POSTROUTING -o "${LAN_INTERFACE}" -j MASQUERADE
+    ip6tables -P FORWARD ACCEPT
+  fi
 }
 
 main(){
@@ -228,14 +316,16 @@ main(){
 
   show_settings
   check_preconditions
+  check_host_ipv6_capability
   save_initial_configuration
 
   enable_cleanup
 
-  configure_network
   configure_ap
+  configure_network
   configure_dnsmasq
   configure_nat
+  configure_radvd
 
   echo_info "Successfully set up 802.11evil."
   echo_info "Press ^C (Ctrl-C) to stop 802.11evil."
