@@ -24,20 +24,24 @@ Program:
   Create evil WiFi access point.
 
 Options:
-  -l    LAN interface                  (default: eth0)
-  -a    Access Point interface         (default: wlan0)
-  -d    Disable WiFi (routing only)    (default: off)
-  -i    Access Point IP address        (default: 192.168.42.1)
-  -s    Access Point SSID              (default: 802.11evil)
-  -p    Access Point password          (default: password)
-  -r    Redirect on/off                (default: off)
-  -f    Redirect ports from            (default: 80,443)
-  -t    Redirect ports to              (default: 8080)
+  -l    LAN interface                     (default: eth0)
+  -a    Access Point interface            (default: wlan0)
+
+  -d    Disable WiFi (routing only)       (default: off)
   -4    IPv4 only mode                    (default: off)
+
+  -i    Access Point IP address           (default: 192.168.42.1)
+  -s    Access Point SSID                 (default: 802.11evil)
+  -p    Access Point password             (default: password)
+
+  -r    Redirect on/off                   (default: off)
+  -f    Redirect ports from               (default: 80,443)
+  -t    Redirect ports to                 (default: 8080)
 
   -o    DHCP Option 121 for Static Route  (default: off)
         Example: 0.0.0.0/1,128.0.0.0/1
 
+Author: Emanuel Duss (https://emanuelduss.ch)
 EOI
 }
 
@@ -125,7 +129,6 @@ enable_cleanup(){ CLEANUP="1"; }
 exit_trap(){
   echo
   echo_info "Stopping 802.11evil..."
-
   [[ "${CLEANUP}" == "1" ]] && exit_cleanup
 }
 trap exit_trap EXIT
@@ -137,7 +140,7 @@ exit_cleanup(){
   echo_info "Stopping hostapd..."
   pkill hostapd
 
-  echo_info "Restoring network interface configuration..."
+  echo_info "Restoring network interface configuration for interface ${AP_INTERFACE}..."
   ip address flush "${AP_INTERFACE}"
   base64 -d <<< "${INITIAL_AP_INTERFACE}" | ip address restore "${AP_INTERFACE}"
 
@@ -212,7 +215,11 @@ save_initial_configuration(){
 
 configure_network(){
   echo_info "Configure access point interface..."
+
+  echo_info "Flushing current configuration..."
   ip address flush "${AP_INTERFACE}"
+
+  echo_info "Configuring IPv4 address ${AP_ADDRESS} on interface ${AP_INTERFACE}..."
   ip address add "${AP_ADDRESS}/24" dev "${AP_INTERFACE}"
 
   if [[ "$IPV4ONLY" == "off" ]]
@@ -221,14 +228,16 @@ configure_network(){
     ip address add "${AP_ADDRESS6}/64" dev "${AP_INTERFACE}"
   fi
 
+  echo_info "Enabing interface..."
   ip link set dev "${AP_INTERFACE}" up
+  sleep 1
   ip -br address list "${AP_INTERFACE}"
 
   if [[ "${REDIRECT}" == "on" ]]
   then
-    echo_info "Configure port redirects..."
     for port in ${REDIRECTPORTS//,/ }
     do
+      echo_info "Configure port redirects for IPv4 for port $port to redirect to ${REDIRECTTO}..."
       iptables -t nat -A PREROUTING -i "${AP_INTERFACE}" -p tcp --dport "$port" -j REDIRECT --to-port "${REDIRECTTO}"
 
       if [[ "$IPV4ONLY" == "off" ]]
@@ -237,6 +246,8 @@ configure_network(){
         ip6tables -t nat -A PREROUTING -i "${AP_INTERFACE}" -p tcp --dport "$port" -j REDIRECT --to-port "${REDIRECTTO}"
       fi
     done
+
+    echo_info "Configured redirects:"
     iptables -nL -t nat | grep REDIRECT
 
     if [[ "$IPV4ONLY" == "off" ]]
@@ -249,6 +260,7 @@ configure_network(){
 }
 
 configure_ap(){
+  echo_info "Starting hostapd for interface ${AP_INTERFACE} with SSID ${SSID} and password ${PASSWORD}..."
   if [[ "${DISABLEWIFI}" == "on" ]]
   then
     echo_info "WiFi is disabled. Only router functionality is available."
@@ -313,7 +325,7 @@ EOI
 }
 
 configure_nat(){
-  echo_info "Configuring IP forwarding and NAT..."
+  echo_info "Configuring IP forwarding and NAT for IPv4 on interface ${LAN_INTERFACE}..."
   sysctl -q -w net.ipv4.ip_forward=1
   iptables -t nat -A POSTROUTING -o "${LAN_INTERFACE}" -j MASQUERADE
   iptables -P FORWARD ACCEPT
