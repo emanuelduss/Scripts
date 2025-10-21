@@ -148,18 +148,25 @@ exit_cleanup(){
   ip address flush "${LAN_INTERFACE}"
   base64 -d <<< "${INITIAL_LAN_INTERFACE}" | ip address restore "${LAN_INTERFACE}"
 
-  sysctl -q -w net.ipv4.ip_forward="${INITIAL_IPFORWARD}"
+  echo_info "Restoring IP routing table..."
+  ip route restore < "${INITIAL_IPROUTE}"
+  rm "${INITIAL_IPROUTE}"
 
-  if [[ "$IPV4ONLY" == "off" ]]
-  then
-    sysctl -q -w net.ipv6.conf.all.forwarding="${INITIAL_IP6FORWARD}"
-  fi
+  echo_info "Restoring IP forwarding mode..."
+  sysctl -q -w net.ipv4.ip_forward="${INITIAL_IPFORWARD}"
 
   echo_info "Restoring iptables configuration..."
   iptables-restore <(echo "${INITIAL_IPTABLES}")
 
   if [[ "$IPV4ONLY" == "off" ]]
   then
+    echo_info "Restoring IPv6 routing table..."
+    ip -6 route restore < "${INITIAL_IP6ROUTE}"
+    rm "${INITIAL_IP6ROUTE}"
+
+    echo_info "Restoring IPv6 forwarding mode..."
+    sysctl -q -w net.ipv6.conf.all.forwarding="${INITIAL_IP6FORWARD}"
+
     echo_info "Restoring ip6tables configuration..."
     ip6tables-restore <(echo "${INITIAL_IP6TABLES}")
   fi
@@ -204,10 +211,14 @@ save_initial_configuration(){
   INITIAL_LAN_INTERFACE="$(ip address save "${LAN_INTERFACE}" | base64 -w0)"
   INITIAL_AP_INTERFACE="$(ip address save "${AP_INTERFACE}" | base64 -w0)"
   INITIAL_IPFORWARD="$(sysctl -n net.ipv4.ip_forward)"
+  INITIAL_IPROUTE=$(mktemp -p /dev/shm/ 802.11evil-route-XXX) # Restore from STDIN does not work (illegal seek error)
+  ip route save > "${INITIAL_IPROUTE}"
   INITIAL_IPTABLES="$(iptables-save)"
 
   if [[ "$IPV4ONLY" == "off" ]]
   then
+    INITIAL_IP6ROUTE=$(mktemp -p /dev/shm/ 802.11evil-route6-XXX)
+    ip -6 route save > "${INITIAL_IP6ROUTE}"
     INITIAL_IP6FORWARD="$(sysctl -n net.ipv6.conf.all.forwarding)"
     INITIAL_IP6TABLES="$(ip6tables-save)"
   fi
