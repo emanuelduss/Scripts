@@ -64,7 +64,7 @@ parse_arguments(){
   DISABLEWIFI="off"
   AP_ADDRESS="192.168.42.1"
   AP_ADDRESS6="fd42::1"
-  AP_ADDRESS6PREFIX="fd42::/64"
+  AP_ADDRESS6PREFIX="${AP_ADDRESS6%::*}::"
   SSID="802.11evil"
   PASSWORD="password"
   REDIRECT="off"
@@ -297,7 +297,16 @@ EOI
 configure_dnsmasq(){
   echo_info "Starting dnsmasq..."
   local subnet="$(cut -d . -f 1-3 <<< "${AP_ADDRESS}")"
+  local routeradvertisements=""
   local staticroute=""
+
+  if [[ "$IPV4ONLY" == "off" ]]
+  then
+    echo_info "Configuring Router Advertisements..."
+    routeradvertisements="--enable-ra --ra-param=${AP_INTERFACE},60 \
+      --dhcp-range=${AP_INTERFACE},${AP_ADDRESS6PREFIX},ra-only \
+      --dhcp-option=option6:dns-server,${AP_ADDRESS6}"
+  fi
 
   if [[ "$DHCP121OPTION" != "off" ]]
   then
@@ -305,34 +314,13 @@ configure_dnsmasq(){
     staticroute="--dhcp-option-force option:classless-static-route,${DHCP121OPTION//,/,$AP_ADDRESS,},$AP_ADDRESS"
   fi
 
-  dnsmasq --no-daemon --interface "${AP_INTERFACE}" --bind-interfaces \
-    --dhcp-range="${subnet}.50,${subnet}.150" ${staticroute} \
+  dnsmasq --no-daemon \
+    --interface "${AP_INTERFACE}" --bind-interfaces \
+    --dhcp-range="${subnet}.50,${subnet}.150" \
+    ${staticroute} \
+    ${routeradvertisements} \
     --log-dhcp --log-queries \
     -C /dev/null &
-}
-
-configure_radvd(){
-  if [[ "$IPV4ONLY" == "off" ]]
-  then
-    echo_info "Starting radvd on interface ${AP_INTERFACE}..."
-    radvd -n -C <(cat << EOI
-interface ${AP_INTERFACE} {
-  AdvSendAdvert on;
-  MinRtrAdvInterval 3;
-  MaxRtrAdvInterval 10;
-  prefix ${AP_ADDRESS6PREFIX} {
-    AdvOnLink on;
-    AdvAutonomous on;
-    # AdvRouterAddr on;
-  };
-  RDNSS ${AP_ADDRESS6}
-  {
-    AdvRDNSSLifetime 30;
-  };
-};
-EOI
-)&
-  fi
 }
 
 configure_nat(){
@@ -369,7 +357,6 @@ main(){
   configure_network
   configure_dnsmasq
   configure_nat
-  configure_radvd
 
   echo_info "Successfully set up 802.11evil."
   echo_info "Press ^C (Ctrl-C) to stop 802.11evil."
