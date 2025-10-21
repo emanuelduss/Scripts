@@ -295,14 +295,13 @@ EOI
 }
 
 configure_dnsmasq(){
-  echo_info "Starting dnsmasq..."
   local subnet="$(cut -d . -f 1-3 <<< "${AP_ADDRESS}")"
   local routeradvertisements=""
   local staticroute=""
 
   if [[ "$IPV4ONLY" == "off" ]]
   then
-    echo_info "Configuring Router Advertisements..."
+    echo_info "Configuring Router Advertisements for ${AP_ADDRESS6PREFIX}..."
     routeradvertisements="--enable-ra --ra-param=${AP_INTERFACE},60 \
       --dhcp-range=${AP_INTERFACE},${AP_ADDRESS6PREFIX},ra-only \
       --dhcp-option=option6:dns-server,${AP_ADDRESS6}"
@@ -314,6 +313,7 @@ configure_dnsmasq(){
     staticroute="--dhcp-option-force option:classless-static-route,${DHCP121OPTION//,/,$AP_ADDRESS,},$AP_ADDRESS"
   fi
 
+  echo_info "Starting dnsmasq..."
   dnsmasq --no-daemon \
     --interface "${AP_INTERFACE}" --bind-interfaces \
     --dhcp-range="${subnet}.50,${subnet}.150" \
