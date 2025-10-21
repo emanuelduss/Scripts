@@ -292,6 +292,14 @@ macaddr_acl=0
 EOI
 ) &
   fi
+
+  if hash qrencode
+  then
+    echo_info "Generating Wi-Fi QR code..."
+    qrencode -t utf8 <<< "WIFI:S:${SSID};T:WPA;P:${PASSWORD};;"
+  else
+    echo_info "Cannot generate Wi-Fi QR code because qrencode is not installed."
+  fi
 }
 
 configure_dnsmasq(){
