@@ -21,7 +21,7 @@ cat << EOI
 Usage: 802.11evil [OPTION ...]
 
 Program:
-  Create evil WiFi access point.
+  Create evil WiFi access point / router.
 
 Options:
   -l    LAN interface                     (default: eth0)
@@ -182,7 +182,7 @@ cat << EOI
     | (_) | |_| / __/ _| | |  __/\ V /| | |
      \___/ \___/_____(_)_|_|\___| \_/ |_|_|
 
-           Evil Wi-Fi access point.
+           Evil Wi-Fi access point / router
 
 EOI
 
@@ -199,6 +199,17 @@ show_settings(){
   echo_info "Configured port(s) to redirect: ${REDIRECTPORTS}"
   echo_info "Configured port to redirect to: ${REDIRECTTO}"
   echo_info "Configured DHCP option 121: ${DHCP121OPTION}"
+
+  if [[ "${DISABLEWIFI}" == "off" ]]
+  then
+    if hash qrencode
+    then
+      echo_info "Wi-Fi QR Code:"
+      qrencode -t utf8 <<< "WIFI:S:${SSID};T:WPA;P:${PASSWORD};;"
+    else
+      echo_info "Cannot generate Wi-Fi QR code because qrencode is not installed."
+    fi
+  fi
   echo
 }
 
@@ -305,14 +316,6 @@ wpa_ptk_rekey=600
 macaddr_acl=0
 EOI
 ) &
-  fi
-
-  if hash qrencode
-  then
-    echo_info "Generating Wi-Fi QR code..."
-    qrencode -t utf8 <<< "WIFI:S:${SSID};T:WPA;P:${PASSWORD};;"
-  else
-    echo_info "Cannot generate Wi-Fi QR code because qrencode is not installed."
   fi
 }
 
