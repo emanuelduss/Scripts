@@ -356,7 +356,7 @@ configure_dnsmasq(){
   then
     echo_info "Configuring Router Advertisements for ${AP_ADDRESS6PREFIX}..."
     routeradvertisements="--enable-ra --ra-param=${AP_INTERFACE},60 \
-      --dhcp-range=${AP_INTERFACE},${AP_ADDRESS6PREFIX},ra-only \
+      --dhcp-range=::,constructor:${AP_INTERFACE},ra-stateless,64 \
       --dhcp-option=option6:dns-server,${AP_ADDRESS6}"
   fi
 
