@@ -356,7 +356,7 @@ configure_dnsmasq(){
   echo_info "Starting dnsmasq..."
   dnsmasq --no-daemon \
     --interface "${AP_INTERFACE}" --bind-interfaces \
-    --dhcp-range="${subnet}.50,${subnet}.150" \
+    --dhcp-range="${subnet}.50,${subnet}.150,1m" \
     ${staticroute} \
     ${routeradvertisements} \
     --log-dhcp --log-queries \
