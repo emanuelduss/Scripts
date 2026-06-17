@@ -221,6 +221,19 @@ check_preconditions(){
   fi
 }
 
+check_host_network_issues(){
+  echo_info "Checking for common networking issues..."
+  local fail=0
+
+  if systemctl --quiet is-active NetworkManager
+  then
+    echo_error "NetworkManager must not be running."
+    fail=1
+  fi
+
+  [[ "$fail" == 1 ]] && exit 1
+}
+
 check_host_ipv6_capability(){
   if ip -6 addr list ${LAN_INTERFACE} | grep -q global
   then
@@ -390,6 +403,7 @@ main(){
   show_settings
   check_preconditions
   check_host_ipv6_capability
+  check_host_network_issues
   save_initial_configuration
 
   enable_cleanup
