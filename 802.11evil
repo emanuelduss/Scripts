@@ -302,18 +302,33 @@ configure_ap(){
     echo_info "WiFi is disabled. Only router functionality is available."
   else
     echo_info "Starting hostapd..."
+    # See documentation: https://git.w1.fi/cgit/hostap/plain/hostapd/hostapd.conf
     hostapd <(cat << EOI
 interface=${AP_INTERFACE}
+# Default Linux driver
 driver=nl80211
-ssid=${SSID}
+# Advertise country code and allowed channels
+ieee80211d=1
+country_code=CH
+# Mode: a = 5 GHz, b = 2.4 GHz, g = 2.4 GHz
 hw_mode=g
-channel=6
-wpa_passphrase=${PASSWORD}
-wpa=1
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP CCMP
-wpa_ptk_rekey=600
+# Manually selecht channel (1, 6 or 11 for 2.4 GHz)
+channel=1
+# Allow all MAC addresses to connect
 macaddr_acl=0
+
+# WiFi Name and Password
+ssid=${SSID}
+wpa_passphrase=${PASSWORD}
+
+# Enable WPA, 2 = WPA2 and WPA3
+wpa=2
+# WPA2 PSK
+auth_algs=1
+wpa_key_mgmt=WPA-PSK
+# Disable insecure TKIP encryption algorithm
+wpa_pairwise=CCMP
+rsn_pairwise=CCMP
 EOI
 ) &
   fi
