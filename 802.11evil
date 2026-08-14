@@ -374,6 +374,7 @@ configure_dnsmasq(){
     ${routeradvertisements} \
     --log-dhcp --log-queries \
     -C /dev/null &
+    #--domain=example.net --dhcp-option=option:domain-search,example.net --dhcp-option=option:domain-name,example.net \
 }
 
 configure_nat(){
