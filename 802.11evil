@@ -393,6 +393,29 @@ configure_nat(){
     ip6tables -P FORWARD ACCEPT
   fi
 }
+configure_radvd(){
+  if [[ "$IPV4ONLY" == "off" ]]
+  then
+    echo_info "Starting radvd on interface ${AP_INTERFACE}..."
+    radvd -n -C <(cat << EOI
+interface ${AP_INTERFACE} {
+  AdvSendAdvert on;
+  MinRtrAdvInterval 3;
+  MaxRtrAdvInterval 10;
+  prefix ${AP_ADDRESS6PREFIX} {
+    AdvOnLink on;
+    AdvAutonomous on;
+    # AdvRouterAddr on;
+  };
+  RDNSS ${AP_ADDRESS6}
+  {
+    AdvRDNSSLifetime 30;
+  };
+};
+EOI
+)&
+  fi
+}
 
 main(){
   check_dependencies hostapd dnsmasq
@@ -412,6 +435,7 @@ main(){
   configure_ap
   configure_network
   configure_dnsmasq
+  #configure_radvd # TODO
   configure_nat
 
   echo_info "Successfully set up 802.11evil."
