@@ -63,7 +63,7 @@ parse_arguments(){
   AP_INTERFACE="wlan0"
   DISABLEWIFI="off"
   AP_ADDRESS="192.168.42.1" # Will be /24
-  AP_ADDRESS6="fd42::1"
+  AP_ADDRESS6="2001:db8::1"
   AP_ADDRESS6PREFIX="${AP_ADDRESS6%::*}::"
   SSID="802.11evil"
   PASSWORD="password"
